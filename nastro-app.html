@@ -82,6 +82,18 @@
   .pForm{display:flex;flex-direction:column;gap:12px;background:rgba(12,26,44,.5);border:1px solid rgba(95,135,176,.16);border-radius:16px;padding:14px;margin:8px 0 14px;}
   .pForm label{font-family:var(--mono);font-size:12px;color:#8FA6BE;display:flex;justify-content:space-between;align-items:center;gap:10px;}
   .pForm select{flex:1;background:#0E1C2E;color:#E8EEF2;border:1px solid rgba(95,135,176,.3);border-radius:10px;padding:8px 10px;font-family:var(--mono);font-size:13px;max-width:64%;}
+  .pEnd{display:flex;flex-direction:column;gap:6px;}
+  .pEndRow{display:flex;align-items:baseline;gap:10px;}
+  .pEndLab{font-family:var(--mono);font-size:12px;color:#8FA6BE;min-width:24px;}
+  .pEndSel{font-family:var(--mono);font-size:14px;font-weight:700;color:#E8EEF2;}
+  .pSearch{width:100%;background:#0E1C2E;color:#E8EEF2;border:1px solid rgba(95,135,176,.3);border-radius:10px;padding:9px 12px;font-family:var(--mono);font-size:13px;}
+  .pSearch::placeholder{color:#5E7894;}
+  .pRes{display:flex;flex-direction:column;background:rgba(8,16,30,.9);border-radius:10px;overflow:hidden;}
+  .pRes:empty{display:none;}
+  .pResItem{font-family:var(--mono);font-size:13px;color:#E8EEF2;padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(95,135,176,.1);}
+  .pResItem:hover{background:rgba(43,217,196,.1);}
+  .pResSub{color:#7B93AC;font-size:11px;}
+  .pResMuted{color:#7B93AC;cursor:default;}
   .pRow{display:flex;align-items:center;gap:10px;}
   .pL{font-family:var(--mono);font-size:12px;color:#8FA6BE;min-width:72px;}
   .pV{font-family:var(--mono);font-size:12.5px;color:#E8EEF2;min-width:100px;text-align:right;}
@@ -114,9 +126,10 @@
   .pCons{background:rgba(18,40,63,.5);border:1px solid rgba(95,135,176,.16);}
   .pTitle{font-family:var(--mono);font-size:14px;font-weight:600;color:#C3D4E6;}.read{font-size:14.5px;line-height:1.5;color:#AFC2D6;margin:12px 0 0;}
   .track{position:relative;flex:1;height:2px;border-radius:2px;background:linear-gradient(90deg,rgba(95,135,176,.15),rgba(95,135,176,.5),rgba(95,135,176,.15));}
-  .trackRow{display:flex;align-items:center;gap:12px;margin:24px 0 8px;}.trackRow .end{font-family:var(--mono);font-size:12px;color:#56708E;}
+  .trackRow{display:flex;align-items:center;gap:12px;margin:54px 0 8px;}.trackRow .end{font-family:var(--mono);font-size:12px;color:#56708E;}
   .mdot{position:absolute;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;}
-  .mtag{font-family:var(--mono);font-size:10px;color:#9FB6CC;position:absolute;bottom:13px;white-space:nowrap;}
+  .mtag{font-family:var(--mono);font-size:10px;color:#9FB6CC;position:absolute;bottom:14px;left:50%;transform:translateX(-50%);white-space:nowrap;}
+  .mline{position:absolute;left:50%;transform:translateX(-50%);bottom:6px;width:1px;background:rgba(159,182,204,.4);}
   .dot{width:12px;height:12px;border-radius:50%;box-shadow:0 0 10px rgba(255,255,255,.35);}
   .row .l{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#56708E;text-transform:uppercase;}.row .v{font-family:var(--mono);font-weight:700;}
   .tapHint{font-family:var(--mono);font-size:10.5px;color:#9D7BD8;margin-top:8px;}
@@ -156,8 +169,16 @@
     <h1 style="margin-top:2px">Traversata</h1>
     <div class="src">Che tempo trovi in linea retta da A a B, partendo a una certa ora alla tua velocità.</div>
     <div class="pForm">
-      <label>Da <select id="pFrom"></select></label>
-      <label>A <select id="pTo"></select></label>
+      <div class="pEnd">
+        <div class="pEndRow"><span class="pEndLab">Da</span><span class="pEndSel" id="pFromSel">—</span></div>
+        <input class="pSearch" id="pFromQ" type="text" placeholder="Cerca località o scegli un'area…" autocomplete="off">
+        <div class="pRes" id="pFromRes"></div>
+      </div>
+      <div class="pEnd">
+        <div class="pEndRow"><span class="pEndLab">A</span><span class="pEndSel" id="pToSel">—</span></div>
+        <input class="pSearch" id="pToQ" type="text" placeholder="Cerca località o scegli un'area…" autocomplete="off">
+        <div class="pRes" id="pToRes"></div>
+      </div>
       <div class="pRow"><span class="pL">Partenza</span><input type="range" id="pDep" min="0" max="47" value="12"><span class="pV" id="pDepV">—</span></div>
       <div class="pRow"><span class="pL">Velocità</span><input type="range" id="pSpd" min="2" max="16" value="6"><span class="pV" id="pSpdV">6 kt</span></div>
     </div>
@@ -383,15 +404,27 @@ function useGPS(){
 function haversineNM(a,b){var R=3440.065,dLat=(b[0]-a[0])*Math.PI/180,dLon=(b[1]-a[1])*Math.PI/180,la1=a[0]*Math.PI/180,la2=b[0]*Math.PI/180;var h=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)*Math.sin(dLon/2);return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));}
 function bearingDeg(a,b){var la1=a[0]*Math.PI/180,la2=b[0]*Math.PI/180,dLon=(b[1]-a[1])*Math.PI/180;var y=Math.sin(dLon)*Math.cos(la2),x=Math.cos(la1)*Math.sin(la2)-Math.sin(la1)*Math.cos(la2)*Math.cos(dLon);return (Math.atan2(y,x)*180/Math.PI+360)%360;}
 function fmtClock(startHour,idxFloat){var absH=startHour+idxFloat,hh=((Math.floor(absH)%24)+24)%24,mm=Math.round((absH-Math.floor(absH))*60);if(mm===60){mm=0;hh=(hh+1)%24;}return{t:('0'+hh).slice(-2)+':'+('0'+mm).slice(-2),day:Math.floor(absH/24)};}
-function openPassage(){var fr=document.getElementById('pFrom'),to=document.getElementById('pTo');var opts=SPOTS.map(function(s,i){return '<option value="'+i+'">'+s.nm+'</option>';}).join('');fr.innerHTML=opts;to.innerHTML=opts;fr.value='0';to.value=String(Math.min(1,SPOTS.length-1));document.getElementById('pDep').value=NOW;document.getElementById('pSpd').value=6;document.getElementById('homeView').classList.add('hidden');document.getElementById('passageView').classList.remove('hidden');window.scrollTo(0,0);computePassage();}
+var passFrom=null,passTo=null,_geoT=null;
+var PASS_VARS=["wind_speed_10m","wind_direction_10m","wind_gusts_10m","precipitation","cape","convective_inhibition","temperature_2m","pressure_msl","cloud_cover"];
+function pointForecast(ll){var s={ll:ll},lite=["wind_speed_10m","wind_direction_10m","wind_gusts_10m","precipitation"];return omFetch(s,PASS_VARS).catch(function(){return omFetch(s,lite);}).then(function(j){return parseLive(j);});}
+function ensurePassData(spot,cb){if(!spot.data)spot.data=genSpot({dirOff:0,dsScale:1,spdScale:1,stScale:.5,stBias:0});if(cb)cb();if(!spot._fetched&&spot.searched&&location.protocol!=='file:'){spot._fetched=true;pointForecast(spot.ll).then(function(p){spot.data=p.data;spot.live=true;spot.start=p.start;selectLabel('from');selectLabel('to');computePassage();}).catch(function(){});}}
+function selectLabel(which){var spot=which==='from'?passFrom:passTo,el=document.getElementById(which==='from'?'pFromSel':'pToSel');if(el&&spot)el.innerHTML=spot.nm+(spot.live?' <span style="color:#2BD9C4">● live</span>':'');}
+function selectEnd(which,spot){if(which==='from')passFrom=spot;else passTo=spot;document.getElementById(which==='from'?'pFromQ':'pToQ').value='';document.getElementById(which==='from'?'pFromRes':'pToRes').innerHTML='';ensurePassData(spot,function(){selectLabel(which);computePassage();});selectLabel(which);computePassage();}
+function fetchGeo(q,cb){try{fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(q)+'&count=6&language=it&format=json').then(function(r){return r.json();}).then(function(j){cb((j&&j.results)||[]);}).catch(function(){cb(null);});}catch(e){cb(null);}}
+function passResAttach(container,which,spots){Array.prototype.forEach.call(container.querySelectorAll('.pResItem'),function(el,i){if(spots[i]&&!el.classList.contains('pResMuted'))el.addEventListener('click',function(){selectEnd(which,spots[i]);});});}
+function passAreas(which){var res=document.getElementById(which==='from'?'pFromRes':'pToRes');res.innerHTML=SPOTS.map(function(s){return '<div class="pResItem">'+s.nm+' <span class="pResSub">'+s.ar+'</span></div>';}).join('');passResAttach(res,which,SPOTS);}
+function passSearch(which,v){var res=document.getElementById(which==='from'?'pFromRes':'pToRes');if(v.length<2){passAreas(which);return;}res.innerHTML='<div class="pResItem pResMuted">Cerco…</div>';if(_geoT)clearTimeout(_geoT);_geoT=setTimeout(function(){fetchGeo(v,function(items){if(items===null){res.innerHTML='<div class="pResItem pResMuted">Ricerca non disponibile (serve connessione/https).</div>';return;}if(!items.length){res.innerHTML='<div class="pResItem pResMuted">Nessun risultato.</div>';return;}var spots=items.map(function(it){return{nm:it.name,ll:[it.latitude,it.longitude],searched:true,sub:[it.admin1,it.country_code].filter(Boolean).join(', ')};});res.innerHTML=spots.map(function(sp){return '<div class="pResItem">'+sp.nm+' <span class="pResSub">'+(sp.sub||'')+'</span></div>';}).join('');passResAttach(res,which,spots);});},350);}
+function openPassage(){if(!passFrom)passFrom=SPOTS[0];if(!passTo)passTo=SPOTS[Math.min(1,SPOTS.length-1)];document.getElementById('pDep').value=NOW;document.getElementById('pSpd').value=6;document.getElementById('pFromQ').value='';document.getElementById('pToQ').value='';document.getElementById('pFromRes').innerHTML='';document.getElementById('pToRes').innerHTML='';selectLabel('from');selectLabel('to');document.getElementById('homeView').classList.add('hidden');document.getElementById('passageView').classList.remove('hidden');window.scrollTo(0,0);computePassage();}
 function dayWord(rel){return rel===0?'oggi':rel===1?'domani':'+'+rel+'g';}
 function computePassage(){
-  var iA=+document.getElementById('pFrom').value,iB=+document.getElementById('pTo').value,sp=+document.getElementById('pSpd').value,dep=+document.getElementById('pDep').value;
+  var sp=+document.getElementById('pSpd').value,dep=+document.getElementById('pDep').value;
   document.getElementById('pSpdV').textContent=sp+' kt';
-  var A=SPOTS[iA],B=SPOTS[iB],startHour=A.live?(A.start||0):0,bd=Math.floor(startHour/24);
-  var dl=fmtClock(startHour,dep);document.getElementById('pDepV').textContent=dayWord(dl.day-bd)+' '+dl.t;
   var out=document.getElementById('passageOut');
-  if(iA===iB){out.innerHTML='<div class="pSum"><div class="pSumMeta">Scegli due punti diversi per la traversata.</div></div>';return;}
+  if(!passFrom||!passTo){out.innerHTML='<div class="pSum"><div class="pSumMeta">Scegli partenza e arrivo.</div></div>';return;}
+  var A=passFrom,B=passTo;if(!A.data)ensurePassData(A);if(!B.data)ensurePassData(B);
+  var startHour=A.live?(A.start||0):0,bd=Math.floor(startHour/24);
+  var dl=fmtClock(startHour,dep);document.getElementById('pDepV').textContent=dayWord(dl.day-bd)+' '+dl.t;
+  if(A.ll[0]===B.ll[0]&&A.ll[1]===B.ll[1]){out.innerHTML='<div class="pSum"><div class="pSumMeta">Scegli due punti diversi per la traversata.</div></div>';return;}
   var distNM=haversineNM(A.ll,B.ll),brg=bearingDeg(A.ll,B.ll),hours=distNM/sp,nLen=Math.min(A.data.length,B.data.length);
   var nSeg=Math.max(2,Math.min(8,Math.ceil(hours))),pts=[];
   for(var i=0;i<=nSeg;i++){var frac=i/nSeg,eH=hours*frac,fi=dep+eH,ti=Math.max(0,Math.min(nLen-1,Math.round(fi)));var a=A.data[ti],b=B.data[ti];
@@ -481,7 +514,7 @@ function update(sel){
   var stxt=d.storm>=.1?('<span style="color:'+sev.col+';font-weight:700">'+sev.lbl+'</span> · '+Math.round(d.storm*100)+'% · verso '+dirLabel(d.smDir)):'nessuna cella significativa';
   var sp=document.getElementById('stormPanel');sp.innerHTML='<div class="pTitle">Cella temporalesca · '+dh.day+' '+dh.hh+':00</div><p class="read">'+stxt+'</p>'+(d.storm>=.1?'<div class="tapHint">▸ tocca per aprire la pagina della cella</div>':'');sp.setAttribute('data-open',d.storm>=.1?sel:'');
   var models=[['ECMWF',d.dir],['ICON',d.dLo+(d.dHi-d.dLo)*.2],['GFS',d.dLo+(d.dHi-d.dLo)*.6]];
-  var mdots='';models.forEach(function(m){mdots+='<div class="mdot" style="left:'+clamp(((m[1]-DIR_MIN)/(DIR_MAX-DIR_MIN))*100,2,98)+'%"><span class="mtag">'+m[0]+'</span><span class="dot" style="background:'+speedColor(d.spd)+'"></span></div>';});
+  var mdots='';models.forEach(function(m,i){var off=14+i*15;mdots+='<div class="mdot" style="left:'+clamp(((m[1]-DIR_MIN)/(DIR_MAX-DIR_MIN))*100,2,98)+'%"><span class="mtag" style="bottom:'+off+'px">'+m[0]+'</span><span class="mline" style="height:'+(off-6)+'px"></span><span class="dot" style="background:'+speedColor(d.spd)+'"></span></div>';});
   var state=d.conf>.6?'concordi':d.conf>.35?'divergenti':'in disaccordo';
   var read=d.conf>.6?'Modelli allineati: imposta la strategia con buona sicurezza.':d.conf>.35?'I modelli divergono — orario o tipo di vento incerto. Tieni un piano B.':'Forte disaccordo: scenari opposti. Naviga a vista, non commitare il lato.';
   document.getElementById('consPanel').innerHTML='<div class="pTitle">Consenso modelli · '+dh.day+' '+dh.hh+':00 <span style="color:'+confCol+'">'+state+'</span></div><div class="trackRow"><span class="end">'+deg360(DIR_MIN)+'°</span><div class="track">'+mdots+'</div><span class="end">'+deg360(DIR_MAX)+'°</span></div><p class="read">'+read+'</p>';
@@ -605,7 +638,8 @@ document.getElementById('spotList').addEventListener('click',function(e){var t=e
 document.getElementById('gpsBtn').addEventListener('click',useGPS);
 document.getElementById('passBtn').addEventListener('click',openPassage);
 document.getElementById('pBack').addEventListener('click',function(){document.getElementById('passageView').classList.add('hidden');document.getElementById('homeView').classList.remove('hidden');window.scrollTo(0,0);});
-['pFrom','pTo','pDep','pSpd'].forEach(function(id){var el=document.getElementById(id);el.addEventListener('input',computePassage);el.addEventListener('change',computePassage);});
+['pDep','pSpd'].forEach(function(id){document.getElementById(id).addEventListener('input',computePassage);});
+['from','to'].forEach(function(w){var q=document.getElementById(w==='from'?'pFromQ':'pToQ');q.addEventListener('focus',function(){if(!q.value.trim())passAreas(w);});q.addEventListener('input',function(){passSearch(w,q.value.trim());});});
 document.getElementById('alertPanel').addEventListener('click',function(e){if(e.target.closest('#notifBtn')){enableNotif();return;}var t=e.target.closest('[data-alert]');if(t){var p=t.getAttribute('data-alert').split('_');openAlert(+p[0],+p[1]);}});
 document.getElementById('spotList').addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')){var t=e.target.closest('[data-spot]');if(t){e.preventDefault();openRibbon(+t.getAttribute('data-spot'));}}});
 document.getElementById('backBtn').addEventListener('click',goHome);
