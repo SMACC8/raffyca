@@ -170,6 +170,11 @@ body.light input[type=range]{background:linear-gradient(90deg,#C2D2E4,#8AA8C6);}
 body.light input[type=range]::-webkit-slider-thumb{background:#FFFFFF;border-color:#0C1A28;}
 body.light input[type=range]::-moz-range-thumb{background:#FFFFFF;border-color:#0C1A28;}
 .windStrip{margin:2px 0 0;}
+@keyframes roseZap{0%,89%,100%{opacity:0;}90%,95%{opacity:.95;}}
+.roseBolt{animation:roseZap 3.2s linear infinite;}
+@keyframes roseGlowPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+.roseGlow{transform-box:fill-box;transform-origin:center;animation:roseGlowPulse 3s ease-in-out infinite;}
+@media(prefers-reduced-motion:reduce){.roseBolt,.roseGlow{animation:none!important;}}
 .diagLeg{color:#C3D4E6;}.diagCap{color:#8FA6BE;}.cMid{color:#C3D4E6;}
 .exBtn{margin:10px auto 0;display:block;background:rgba(157,78,221,.16);color:#D9A6FF;border:1px solid rgba(157,78,221,.4);border-radius:10px;padding:7px 14px;font-family:var(--mono);font-size:12.5px;cursor:pointer;}
 .exBtn.on{background:rgba(157,78,221,.34);color:#F0D9FF;}
@@ -209,12 +214,12 @@ body.light .demoNote{color:#7A3FB0;}
     <div class="pForm">
       <div class="pEnd">
         <div class="pEndRow"><span class="pEndLab">Da</span><span class="pEndSel" id="pFromSel">—</span></div>
-        <input class="pSearch" id="pFromQ" type="text" placeholder="Cerca località o scegli un'area…" autocomplete="off">
+        <input class="pSearch" id="pFromQ" type="text" placeholder="Cerca una località…" autocomplete="off">
         <div class="pRes" id="pFromRes"></div>
       </div>
       <div class="pEnd">
         <div class="pEndRow"><span class="pEndLab">A</span><span class="pEndSel" id="pToSel">—</span></div>
-        <input class="pSearch" id="pToQ" type="text" placeholder="Cerca località o scegli un'area…" autocomplete="off">
+        <input class="pSearch" id="pToQ" type="text" placeholder="Cerca una località…" autocomplete="off">
         <div class="pRes" id="pToRes"></div>
       </div>
       <div class="pRow"><span class="pL">Partenza</span><input type="range" id="pDep" min="0" max="47" value="12"><span class="pV" id="pDepV">—</span></div>
@@ -341,13 +346,13 @@ function parseLive(j){
     var instab=clamp(cape/2500,0,1),org=clamp(shear/40,0,1),trig=clamp(prec/4,0,1);
     var risk=clamp(.5*instab+.35*trig+.15*org+(wc>=95?.15:0),0,1);
     var steerDir=steer?steer.dir:vm.dir,steerSpd=steer?steer.spd:vm.spd;
-    raw.push({vmdir:vm.dir,vmspd:vm.spd,lo:lo,hi:hi,maxS:maxS,minS:minS,risk:risk,smTo:(steerDir+180)%360,steerSpd:steerSpd,shear:shear,cape:cape,prec:prec,dirs:dirs.slice(),dg:dg});
+    raw.push({vmdir:vm.dir,vmspd:vm.spd,lo:lo,hi:hi,maxS:maxS,minS:minS,meanMax:Math.max.apply(null,spds),risk:risk,smTo:(steerDir+180)%360,steerSpd:steerSpd,shear:shear,cape:cape,prec:prec,dirs:dirs.slice(),dg:dg});
   }
   var unw=[raw[0].vmdir],acc=raw[0].vmdir;
   for(var i=1;i<raw.length;i++){acc=acc+adiff(raw[i].vmdir,((acc%360)+360)%360);unw.push(acc);}
   var data=[];
-  for(var k=0;k<raw.length;k++){var r=raw[k];data.push({i:k,dir:unw[k],dLo:unw[k]+r.lo,dHi:unw[k]+r.hi,spd:Math.round(r.vmspd),sLo:Math.max(0,Math.round(r.minS)),sHi:Math.round(r.maxS),storm:r.risk,smDir:r.smTo,steerSpd:Math.round(r.steerSpd),shear:Math.round(r.shear),cape:Math.round(r.cape),precip:+r.prec.toFixed(1),mb:r.dirs,dg:r.dg});}
-  data.forEach(function(d){d.conf=clamp(1-(Math.abs(d.dHi-d.dLo)/120)*.7-((d.sHi-d.sLo)/22)*.3,.05,.99);});
+  for(var k=0;k<raw.length;k++){var r=raw[k];data.push({i:k,dir:unw[k],dLo:unw[k]+r.lo,dHi:unw[k]+r.hi,spd:Math.round(r.vmspd),sLo:Math.max(0,Math.round(r.minS)),sHi:Math.round(r.maxS),_ssp:Math.max(0,r.meanMax-r.minS),storm:r.risk,smDir:r.smTo,steerSpd:Math.round(r.steerSpd),shear:Math.round(r.shear),cape:Math.round(r.cape),precip:+r.prec.toFixed(1),mb:r.dirs,dg:r.dg});}
+  data.forEach(function(d){d.conf=clamp(1-(Math.abs(d.dHi-d.dLo)/120)*.7-(clamp(d._ssp||0,0,30)/22)*.3,.05,.99);});
   return {data:data,start:new Date(hr.time[0]).getHours()};
 }
 async function omFetch(s,vars){
@@ -459,7 +464,7 @@ function selectEnd(which,spot){if(which==='from')passFrom=spot;else passTo=spot;
 function fetchGeo(q,cb){try{fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(q)+'&count=6&language=it&format=json').then(function(r){return r.json();}).then(function(j){cb((j&&j.results)||[]);}).catch(function(){cb(null);});}catch(e){cb(null);}}
 function passResAttach(container,which,spots){Array.prototype.forEach.call(container.querySelectorAll('.pResItem'),function(el,i){if(spots[i]&&!el.classList.contains('pResMuted'))el.addEventListener('click',function(){selectEnd(which,spots[i]);});});}
 function passAreas(which){var res=document.getElementById(which==='from'?'pFromRes':'pToRes');res.innerHTML=SPOTS.map(function(s){return '<div class="pResItem">'+s.nm+'</div>';}).join('');passResAttach(res,which,SPOTS);}
-function passSearch(which,v){var res=document.getElementById(which==='from'?'pFromRes':'pToRes');if(v.length<2){passAreas(which);return;}res.innerHTML='<div class="pResItem pResMuted">Cerco…</div>';if(_geoT)clearTimeout(_geoT);_geoT=setTimeout(function(){fetchGeo(v,function(items){if(items===null){res.innerHTML='<div class="pResItem pResMuted">Ricerca non disponibile (serve connessione/https).</div>';return;}if(!items.length){res.innerHTML='<div class="pResItem pResMuted">Nessun risultato.</div>';return;}var spots=items.map(function(it){return{nm:it.name,ll:[it.latitude,it.longitude],searched:true,sub:[it.admin1,it.country_code].filter(Boolean).join(', ')};});res.innerHTML=spots.map(function(sp){return '<div class="pResItem">'+sp.nm+' <span class="pResSub">'+(sp.sub||'')+'</span></div>';}).join('');passResAttach(res,which,spots);});},350);}
+function passSearch(which,v){var res=document.getElementById(which==='from'?'pFromRes':'pToRes');if(v.length<2){res.innerHTML='';return;}res.innerHTML='<div class="pResItem pResMuted">Cerco…</div>';if(_geoT)clearTimeout(_geoT);_geoT=setTimeout(function(){fetchGeo(v,function(items){if(items===null){res.innerHTML='<div class="pResItem pResMuted">Ricerca non disponibile (serve connessione/https).</div>';return;}if(!items.length){res.innerHTML='<div class="pResItem pResMuted">Nessun risultato.</div>';return;}var spots=items.map(function(it){return{nm:it.name,ll:[it.latitude,it.longitude],searched:true,sub:[it.admin1,it.country_code].filter(Boolean).join(', ')};});res.innerHTML=spots.map(function(sp){return '<div class="pResItem">'+sp.nm+' <span class="pResSub">'+(sp.sub||'')+'</span></div>';}).join('');passResAttach(res,which,spots);});},350);}
 function openPassage(){if(!passFrom)passFrom=SPOTS[0];if(!passTo)passTo=SPOTS[Math.min(1,SPOTS.length-1)];document.getElementById('pDep').value=NOW;document.getElementById('pSpd').value=6;document.getElementById('pFromQ').value='';document.getElementById('pToQ').value='';document.getElementById('pFromRes').innerHTML='';document.getElementById('pToRes').innerHTML='';selectLabel('from');selectLabel('to');document.getElementById('homeView').classList.add('hidden');document.getElementById('passageView').classList.remove('hidden');window.scrollTo(0,0);computePassage();}
 function dayWord(rel){return rel===0?'oggi':rel===1?'domani':'+'+rel+'g';}
 function computePassage(){
@@ -569,7 +574,7 @@ function update(sel){
   var models=[['ECMWF',d.dir],['ICON',d.dLo+(d.dHi-d.dLo)*.2],['GFS',d.dLo+(d.dHi-d.dLo)*.6]];
   var mdots='';models.forEach(function(m,i){var off=14+i*15;mdots+='<div class="mdot" style="left:'+clamp(((m[1]-DIR_MIN)/(DIR_MAX-DIR_MIN))*100,2,98)+'%"><span class="mtag" style="bottom:'+off+'px">'+m[0]+'</span><span class="mline" style="height:'+(off-6)+'px"></span><span class="dot" style="background:'+speedColor(d.spd)+'"></span></div>';});
   var state=d.conf>.6?'concordi':d.conf>.35?'divergenti':'in disaccordo';
-  var read=d.conf>.6?'Modelli allineati: imposta la strategia con buona sicurezza.':d.conf>.35?'I modelli divergono — orario o tipo di vento incerto. Tieni un piano B.':'Forte disaccordo: scenari opposti. Naviga a vista, non commitare il lato.';
+  var read=d.conf>.6?'Modelli allineati: imposta la strategia con buona sicurezza.':d.conf>.35?'I modelli divergono — orario o tipo di vento incerto. Tieni un piano B.':'Forte disaccordo: scenari opposti. Naviga a vista, non impegnarti su un lato.';
   document.getElementById('consPanel').innerHTML='<div class="pTitle">Consenso modelli · '+dh.day+' '+dh.hh+':00 <span style="color:'+confCol+'">'+state+'</span></div><div class="trackRow"><span class="end">'+deg360(DIR_MIN)+'°</span><div class="track">'+mdots+'</div><span class="end">'+deg360(DIR_MAX)+'°</span></div><p class="read">'+read+'</p>';
 }
 function openStorm(sel){var d=DATA[sel],dh=hourLabel(sel),sev=severity(d.storm),tr=trendOf(sel),cm=cellModel(d);var tm={up:['▲','in intensificazione','#FF6B6B'],down:['▼','in attenuazione','#2BD9C4'],flat:['●','stabile','#FFC24B'],none:['','—','#56708E']}[tr];var cx=80,cy=80,R=14+d.storm*44,aLen=20+clamp(cm.moveKmh/60,0,1)*34;
@@ -603,12 +608,20 @@ function renderRose(sel){
   var maxS=0;for(var tt=lo-80;tt<=hi+80;tt+=2)maxS=Math.max(maxS,S(tt));
   function shN(t){return S(t)/maxS;}function hF(t){return speedN*shN(t);}
   var P=['<ellipse cx="'+RCX+'" cy="'+RCY+'" rx="'+RRX+'" ry="'+RRY+'" fill="'+T('plane')+'" stroke="rgba(120,150,180,.25)" stroke-width="1.5"/>','<ellipse cx="'+RCX+'" cy="'+RCY+'" rx="'+(RRX*.66)+'" ry="'+(RRY*.66)+'" fill="none" stroke="rgba(120,150,180,.12)"/>','<ellipse cx="'+RCX+'" cy="'+RCY+'" rx="'+(RRX*.33)+'" ry="'+(RRY*.33)+'" fill="none" stroke="rgba(120,150,180,.12)"/>'];
+  var stormI=clamp(d.storm||0,0,1);
+  if(stormI>=0.12){var gG=0.42+0.5*stormI,gop=(0.28+0.5*stormI).toFixed(2);
+    P.push('<defs><radialGradient id="roseStorm" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(206,140,255,0.92)"/><stop offset="50%" stop-color="rgba(157,78,221,0.40)"/><stop offset="100%" stop-color="rgba(157,78,221,0)"/></radialGradient></defs>');
+    P.push('<ellipse class="roseGlow" cx="'+RCX+'" cy="'+RCY+'" rx="'+(RRX*gG).toFixed(1)+'" ry="'+(RRY*gG).toFixed(1)+'" fill="url(#roseStorm)" opacity="'+gop+'"/>');}
   var quads=[],dth=6,th0=lo-2.4*sigma0,th1=hi+2.4*sigma0;
   for(var t=th0;t<th1;t+=dth){for(var rr=0;rr<1;rr+=0.111){var th=t,thn=t+dth,r0=rr,r1=rr+0.111;var op=clamp(Math.pow((shN(th)+shN(thn))/2,0.8)*1.25,0,1);if(op<0.04)continue;var c1=rproj(th,r0,hF(th)*r0),c2=rproj(thn,r0,hF(thn)*r0),c3=rproj(thn,r1,hF(thn)*r1),c4=rproj(th,r1,hF(th)*r1);var zavg=(hF(th)*r0+hF(thn)*r0+hF(thn)*r1+hF(th)*r1)/4;var depth=(c1.depth+c2.depth+c3.depth+c4.depth)/4;var sh=clamp(0.4+0.78*zavg+0.12*(-depth),0.3,1.15);quads.push({d:depth,p:'<path d="M'+c1.x.toFixed(1)+' '+c1.y.toFixed(1)+'L'+c2.x.toFixed(1)+' '+c2.y.toFixed(1)+'L'+c3.x.toFixed(1)+' '+c3.y.toFixed(1)+'L'+c4.x.toFixed(1)+' '+c4.y.toFixed(1)+'Z" fill="'+cssRGB(shadeC(base,sh))+'" fill-opacity="'+op.toFixed(2)+'" stroke="'+cssRGB(shadeC(base,sh*.78))+'" stroke-width="0.4" stroke-opacity="'+op.toFixed(2)+'"/>'});}}
   quads.sort(function(a,b){return b.d-a.d;});quads.forEach(function(q){P.push(q.p);});
   mu.forEach(function(b){var rg=[];for(var rr2=0;rr2<=1.001;rr2+=0.1){var pp=rproj(b,rr2,hF(b)*rr2);rg.push((rr2===0?'M':'L')+pp.x.toFixed(1)+' '+pp.y.toFixed(1));}P.push('<path d="'+rg.join('')+'" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/>');});
   [[0,'N'],[45,'NE'],[90,'E'],[135,'SE'],[180,'S'],[225,'SW'],[270,'W'],[315,'NW']].forEach(function(mm){var pp=rproj(mm[0],1.2,0);P.push('<text x="'+pp.x.toFixed(1)+'" y="'+(pp.y+4).toFixed(1)+'" fill="'+(mm[1]==='N'?T('compN'):'#7E97B2')+'" font-size="14" font-weight="'+(mm[1]==='N'?700:500)+'" text-anchor="middle" font-family="'+MONO+'">'+mm[1]+'</text>');});
   mb.forEach(function(b){var a=rproj(b,1.0,0),bb=rproj(b,1.09,0);P.push('<line x1="'+a.x.toFixed(1)+'" y1="'+a.y.toFixed(1)+'" x2="'+bb.x.toFixed(1)+'" y2="'+bb.y.toFixed(1)+'" stroke="rgba(232,238,242,.75)" stroke-width="2"/>');});
+  if(stormI>=0.3){var nb=stormI>=0.6?3:2,bcol=LIGHT?'#7A2EB0':'#E9D5FF',h=58+86*stormI,y0=RCY-6;
+    for(var bi=0;bi<nb;bi++){var bx=RCX+(bi-(nb-1)/2)*26,p='M'+bx+' '+y0.toFixed(0)+' L'+(bx-10)+' '+(y0-h*0.4).toFixed(0)+' L'+(bx+6)+' '+(y0-h*0.55).toFixed(0)+' L'+(bx-2)+' '+(y0-h).toFixed(0);
+      P.push('<path class="roseBolt" style="animation-delay:'+(bi*0.85).toFixed(2)+'s" d="'+p+'" fill="none" stroke="'+bcol+'" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>');
+      P.push('<path class="roseBolt" style="animation-delay:'+(bi*0.85).toFixed(2)+'s" d="'+p+'" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>');}}
   document.getElementById('roseScene').innerHTML=P.join('');
   var dh=hourLabel(sel),confCol=d.conf>.6?'#7BE05A':d.conf>.35?'#FFC24B':'#FF6B6B';
   document.getElementById('roseSnap').innerHTML='<div class="snap"><div class="l">Quando</div><div class="v">'+dh.day+' '+dh.hh+':00</div><div class="s">ora selezionata</div></div><div class="snap"><div class="l">Provenienza</div><div class="v">'+dirLabel(mean)+' '+Math.round(deg360(mean))+'°</div><div class="s">apertura '+Math.round(spread)+'°</div></div><div class="snap"><div class="l">Intensità</div><div class="v" style="color:'+cssRGB(base)+'">'+d.spd+' kt</div><div class="s">altezza del lobo</div></div><div class="snap"><div class="l">Confidenza</div><div class="v" style="color:'+confCol+'">'+Math.round(d.conf*100)+'%</div><div class="s">'+(spread>55?'bimodale':'concorde')+'</div></div>';
@@ -696,7 +709,7 @@ document.getElementById('gpsBtn').addEventListener('click',useGPS);
 document.getElementById('passBtn').addEventListener('click',openPassage);
 document.getElementById('pBack').addEventListener('click',function(){document.getElementById('passageView').classList.add('hidden');document.getElementById('homeView').classList.remove('hidden');window.scrollTo(0,0);});
 ['pDep','pSpd'].forEach(function(id){document.getElementById(id).addEventListener('input',computePassage);});
-['from','to'].forEach(function(w){var q=document.getElementById(w==='from'?'pFromQ':'pToQ');q.addEventListener('focus',function(){if(!q.value.trim())passAreas(w);});q.addEventListener('input',function(){passSearch(w,q.value.trim());});});
+['from','to'].forEach(function(w){var q=document.getElementById(w==='from'?'pFromQ':'pToQ');q.addEventListener('input',function(){passSearch(w,q.value.trim());});});
 document.getElementById('alertPanel').addEventListener('click',function(e){if(e.target.closest('#notifBtn')){enableNotif();return;}var t=e.target.closest('[data-alert]');if(t){var p=t.getAttribute('data-alert').split('_');openAlert(+p[0],+p[1]);}});
 document.getElementById('spotList').addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')){var t=e.target.closest('[data-spot]');if(t){e.preventDefault();openRibbon(+t.getAttribute('data-spot'));}}});
 document.getElementById('backBtn').addEventListener('click',goHome);
