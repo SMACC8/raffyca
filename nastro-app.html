@@ -2,6 +2,15 @@
 <html lang="it"><head>
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>Raffyca · Il Nastro del Vento</title>
+<meta name="description" content="Meteo tattico per la vela in Alto Adriatico — aggregatore multi-modello."/>
+<meta name="theme-color" content="#0A1628"/>
+<link rel="manifest" href="manifest.json"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Raffyca"/>
+<link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230A1628'/><path d='M6 36 Q20 20 32 36 T58 36' stroke='%232BD9C4' stroke-width='6' fill='none' stroke-linecap='round'/><path d='M6 44 Q20 28 32 44 T58 44' stroke='%23FFC24B' stroke-width='5' fill='none' stroke-linecap='round' opacity='.85'/></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230A1628'/><path d='M6 36 Q20 20 32 36 T58 36' stroke='%232BD9C4' stroke-width='6' fill='none' stroke-linecap='round'/><path d='M6 44 Q20 28 32 44 T58 44' stroke='%23FFC24B' stroke-width='5' fill='none' stroke-linecap='round' opacity='.85'/></svg>">
 <style>
@@ -370,7 +379,7 @@ async function loadLive(idx){
     var p=parseLive(j);
     s.data=p.data;s.live=true;s.start=p.start;
     renderHome();
-    if(currentSpot===idx){START=p.start;setWindow();buildChart();update(Math.min(+slider.value,s.data.length-1));currentCells=stormDemo?exampleCells():makeCells(s);try{renderRose(+document.getElementById('rslider').value);}catch(e){}if(activeView==='storm')renderStorm(stormPlaying?STORM_T:+document.getElementById('sslider').value);if(activeView==='diag')renderDiag();}
+    if(currentSpot===idx){DATA=s.data;START=p.start;setWindow();buildChart();update(Math.min(+slider.value,s.data.length-1));currentCells=stormDemo?exampleCells():makeCells(s);try{renderRose(+document.getElementById('rslider').value);}catch(e){}if(activeView==='storm')renderStorm(stormPlaying?STORM_T:+document.getElementById('sslider').value);if(activeView==='diag')renderDiag();}
     setPill('live');
   }catch(e){s.live=false;setPill('demo',(e&&e.message)||String(e));}
 }
@@ -599,7 +608,7 @@ function rproj(bearing,rho,z){var a=deg360(bearing)*Math.PI/180;var e=rho*Math.s
 function renderRose(sel){
   var d=DATA[sel];if(!d)return;
   var mb=(d.mb&&d.mb.length>=2)?d.mb:[d.dir,d.dLo+(d.dHi-d.dLo)*.2,d.dLo+(d.dHi-d.dLo)*.6];
-  var mean=circMean(mb),mu=mb.map(function(b){return mean+adiff(b,mean);});
+  var mean=deg360(d.dir),mu=mb.map(function(b){return mean+adiff(b,mean);});
   var lo=Math.min.apply(null,mu),hi=Math.max.apply(null,mu),spread=hi-lo,sigma0=13,speedN=clamp(d.spd/26,0,1),base=speedRGB(d.spd);
   function S(t){var s=0;mu.forEach(function(b){s+=Math.exp(-0.5*Math.pow(adiff(t,b)/sigma0,2));});return s;}
   var maxS=0;for(var tt=lo-80;tt<=hi+80;tt+=2)maxS=Math.max(maxS,S(tt));
@@ -607,7 +616,7 @@ function renderRose(sel){
   var P=['<ellipse cx="'+RCX+'" cy="'+RCY+'" rx="'+RRX+'" ry="'+RRY+'" fill="'+T('plane')+'" stroke="rgba(120,150,180,.25)" stroke-width="1.5"/>','<ellipse cx="'+RCX+'" cy="'+RCY+'" rx="'+(RRX*.66)+'" ry="'+(RRY*.66)+'" fill="none" stroke="rgba(120,150,180,.12)"/>','<ellipse cx="'+RCX+'" cy="'+RCY+'" rx="'+(RRX*.33)+'" ry="'+(RRY*.33)+'" fill="none" stroke="rgba(120,150,180,.12)"/>'];
   var stormI=stormDemo?Math.max(clamp(d.storm||0,0,1),0.9):clamp(d.storm||0,0,1);
   var _now=Date.now(),_red=(typeof matchMedia!=='undefined'&&matchMedia('(prefers-reduced-motion:reduce)').matches);
-  if(stormI>=0.12){var gG=0.42+0.5*stormI,gpulse=_red?1:(1+0.05*Math.sin(_now/1000*2.0)),gop=(0.28+0.5*stormI).toFixed(2);
+  if(stormI>=0.18){var gG=0.30+0.42*stormI,gpulse=_red?1:(1+0.045*Math.sin(_now/1000*2.0)),gop=(0.10+0.62*Math.pow(stormI,1.5)).toFixed(2);
     P.push('<defs><radialGradient id="roseStorm" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(206,140,255,0.92)"/><stop offset="50%" stop-color="rgba(157,78,221,0.40)"/><stop offset="100%" stop-color="rgba(157,78,221,0)"/></radialGradient></defs>');
     P.push('<ellipse cx="'+RCX+'" cy="'+RCY+'" rx="'+(RRX*gG*gpulse).toFixed(1)+'" ry="'+(RRY*gG*gpulse).toFixed(1)+'" fill="url(#roseStorm)" opacity="'+gop+'"/>');}
   var quads=[],dth=6,th0=lo-2.4*sigma0,th1=hi+2.4*sigma0;
@@ -616,7 +625,7 @@ function renderRose(sel){
   mu.forEach(function(b){var rg=[];for(var rr2=0;rr2<=1.001;rr2+=0.1){var pp=rproj(b,rr2,hF(b)*rr2);rg.push((rr2===0?'M':'L')+pp.x.toFixed(1)+' '+pp.y.toFixed(1));}P.push('<path d="'+rg.join('')+'" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/>');});
   [[0,'N'],[45,'NE'],[90,'E'],[135,'SE'],[180,'S'],[225,'SW'],[270,'W'],[315,'NW']].forEach(function(mm){var pp=rproj(mm[0],1.2,0);P.push('<text x="'+pp.x.toFixed(1)+'" y="'+(pp.y+4).toFixed(1)+'" fill="'+(mm[1]==='N'?T('compN'):'#7E97B2')+'" font-size="14" font-weight="'+(mm[1]==='N'?700:500)+'" text-anchor="middle" font-family="'+MONO+'">'+mm[1]+'</text>');});
   mb.forEach(function(b){var a=rproj(b,1.0,0),bb=rproj(b,1.09,0);P.push('<line x1="'+a.x.toFixed(1)+'" y1="'+a.y.toFixed(1)+'" x2="'+bb.x.toFixed(1)+'" y2="'+bb.y.toFixed(1)+'" stroke="rgba(232,238,242,.75)" stroke-width="2"/>');});
-  if(stormI>=0.22){var nb=1,bcol=LIGHT?'#7A2EB0':'#E9D5FF',h=(58+86*stormI)*0.7,y0=RCY-6;
+  if(stormI>=0.35){var nb=1,bcol=LIGHT?'#7A2EB0':'#E9D5FF',h=(58+86*stormI)*0.56,y0=RCY-6;
     function _flick(ph){if(_red)return 0.85;var t=(((_now/1000)+ph)%2.0);return t<0.10?1:t<0.18?0.14:t<0.26?0.92:t<0.34?0.10:0.07;}
     for(var bi=0;bi<nb;bi++){var bx=RCX+(bi-(nb-1)/2)*26,op=_flick(bi*0.5).toFixed(2),p='M'+bx+' '+y0.toFixed(0)+' L'+(bx-10)+' '+(y0-h*0.4).toFixed(0)+' L'+(bx+6)+' '+(y0-h*0.55).toFixed(0)+' L'+(bx-2)+' '+(y0-h).toFixed(0);
       P.push('<path class="roseBolt" d="'+p+'" fill="none" stroke="'+bcol+'" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="'+op+'"/>');
@@ -702,6 +711,8 @@ var renderDiag=(function(){
 var slider=document.getElementById('slider');
 renderHome();
 document.body.classList.toggle('light',LIGHT);
+/* all'avvio: scarica i dati attuali per tutte le aree (aggiorna la home man mano) */
+(function(){try{SPOTS.forEach(function(_s,i){loadLive(i);});}catch(e){}})();
 (function(){var _tb=document.getElementById('themeBtn');if(_tb){_tb.textContent=LIGHT?'🌙':'☀';_tb.addEventListener('click',toggleLight);}})();
 document.getElementById('spotList').addEventListener('click',function(e){var t=e.target.closest('[data-spot]');if(t)openRibbon(+t.getAttribute('data-spot'));});
 document.getElementById('gpsBtn').addEventListener('click',useGPS);
@@ -725,4 +736,5 @@ document.getElementById('splay').addEventListener('click',function(){stormPlayin
 document.getElementById('stormDemoBtn').addEventListener('click',function(){stormDemo=!stormDemo;this.classList.toggle('on',stormDemo);this.textContent=stormDemo?'⚡ Nascondi esempio':'⚡ Mostra un esempio';document.getElementById('stormDemoNote').classList.toggle('hidden',!stormDemo);currentCells=stormDemo?exampleCells():makeCells(SPOTS[currentSpot]);STORM_T=0;document.getElementById('sslider').value=0;if(stormPlaying){stormPlaying=false;document.getElementById('splay').textContent='▶';}renderStorm(0);});
 requestAnimationFrame(animLoop);
 </script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
 </body></html>
