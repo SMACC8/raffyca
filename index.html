@@ -364,6 +364,7 @@ function parseLive(j){
   data.forEach(function(d){d.conf=clamp(1-(Math.abs(d.dHi-d.dLo)/120)*.7-(clamp(d._ssp||0,0,30)/22)*.3,.05,.99);});
   var off=Math.max(0,Math.min(WIN,data.length-2));
   data=data.slice(off);if(data.length>48)data=data.slice(0,48);
+  data.forEach(function(d,k){d.i=k;});
   return {data:data,start:new Date(hr.time[off]).getHours()};
 }
 async function omFetch(s,vars){
