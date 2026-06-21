@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="it"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Raffyca · laboratorio routing</title>
+<style>
+  :root{
+    --bg:#0A1628;--bg2:#0E1F33;--ink:#E8EEF2;--sub:#7B93AC;--line:#1C3349;
+    --teal:#2BD9C4;--amber:#FFC24B;--coral:#FF6B6B;--green:#2FD27A;--mag:#FF4DA6;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(120% 80% at 50% -10%,#0E2138,var(--bg) 60%);
+    color:var(--ink);font-family:var(--mono);-webkit-font-smoothing:antialiased;padding:20px 14px 60px;}
+  .wrap{max-width:780px;margin:0 auto;}
+  .eyebrow{font-size:11px;letter-spacing:.22em;color:var(--sub);text-transform:uppercase;}
+  h1{font-size:22px;margin:6px 0 2px;font-weight:700;}
+  .lede{color:var(--sub);font-size:12.5px;line-height:1.6;margin:0 0 14px;max-width:62ch;}
+  .lede b{color:var(--ink);font-weight:600;}
+  .card{background:linear-gradient(180deg,var(--bg2),#0B1B2E);border:1px solid var(--line);
+    border-radius:16px;padding:10px;box-shadow:0 10px 40px -20px #000;}
+  svg{width:100%;height:auto;display:block;border-radius:10px;}
+  .ctrls{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px;margin:14px 2px 2px;}
+  @media(max-width:560px){.ctrls{grid-template-columns:1fr;}}
+  .ctrl{display:flex;flex-direction:column;gap:5px;}
+  .ctrl .row{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;}
+  .ctrl .k{color:var(--sub);}.ctrl .v{color:var(--ink);font-weight:700;}
+  input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:4px;border-radius:3px;
+    background:linear-gradient(90deg,#39506b,#2C4763);outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+    background:var(--teal);border:3px solid #07121F;cursor:pointer;}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--teal);border:3px solid #07121F;cursor:pointer;}
+  input[type=range]:disabled{opacity:.4;}
+  .togg{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--ink);cursor:pointer;user-select:none;}
+  .togg input{appearance:none;width:38px;height:21px;border-radius:999px;background:#2A405A;position:relative;outline:none;cursor:pointer;transition:.18s;flex:0 0 auto;}
+  .togg input:checked{background:rgba(255,194,75,.55);}
+  .togg input::after{content:"";position:absolute;top:2.5px;left:2.5px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.18s;}
+  .togg input:checked::after{transform:translateX(17px);}
+  .hint{font-size:11px;color:var(--sub);line-height:1.5;}
+  .read{font-size:12.5px;color:var(--sub);margin:12px 2px 0;line-height:1.7;}
+  .read b{color:var(--ink);}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--sub);margin:10px 2px 0;align-items:center;}
+  .legend i{display:inline-block;width:22px;height:0;border-top-width:3px;border-top-style:solid;vertical-align:middle;margin-right:6px;}
+  .foot{color:var(--sub);font-size:11px;margin-top:16px;line-height:1.6;}
+  .scn{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 12px;}
+  .scn button{appearance:none;border:1px solid var(--line);background:#0C1C30;color:var(--sub);
+    font-family:var(--mono);font-size:12px;padding:8px 11px;border-radius:999px;cursor:pointer;transition:.18s;}
+  .scn button:hover{border-color:#2C4763;color:var(--ink);}
+  .scn button.on{background:rgba(43,217,196,.12);border-color:var(--teal);color:var(--teal);}
+  .scn button:focus-visible{outline:2px solid var(--teal);outline-offset:2px;}
+  .boat{color:var(--teal);font-weight:700;}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Raffyca · laboratorio routing</div>
+  <h1>Isocrone, polare vera, motore</h1>
+  <p class="lede">Il motore a isocrone trova la rotta più veloce da <b>A</b> a <b>B</b> sulla polare reale di <b class="boat">Raffyca</b>, ora dentro un <b>campo di vento</b> che cambia nello spazio (le frecce variano, la velatura mostra la pressione). Scegli un campo e guarda la rotta piegarsi per inseguire pressione e rotazioni. Accendi il <b style="color:var(--amber)">motore</b> per i tratti senza vento.</p>
+
+  <div class="scn" id="fld">
+    <button data-f="uniforme">Vento uniforme</button>
+    <button data-f="gradiente" class="on">Gradiente di pressione</button>
+    <button data-f="brezza">Brezza rotante</button>
+    <button data-f="fronte">Fronte (salto)</button>
+  </div>
+  <div class="card">
+    <svg id="map" viewBox="0 0 800 520" role="img" aria-label="Mappa del routing con isocrone"></svg>
+  </div>
+
+  <div class="ctrls">
+    <div class="ctrl">
+      <div class="row"><span class="k">Direzione vento (da)</span><span class="v"><span id="twdV">45</span>°</span></div>
+      <input type="range" id="twd" min="0" max="359" step="1" value="45">
+      <div class="hint">Ruota il vento rispetto all'asse A→B (verso Est).</div>
+    </div>
+    <div class="ctrl">
+      <div class="row"><span class="k">Intensità vento</span><span class="v"><span id="twsV">12</span> kt</span></div>
+      <input type="range" id="tws" min="2" max="24" step="0.5" value="12">
+      <div class="hint">Cala sotto i nodi-motore per vedere il motore entrare.</div>
+    </div>
+    <div class="ctrl">
+      <label class="togg"><input type="checkbox" id="motorOn" checked> Motore disponibile</label>
+      <div class="hint">Quando la vela è più lenta dei nodi-motore, va a motore.</div>
+    </div>
+    <div class="ctrl">
+      <div class="row"><span class="k">Velocità motore</span><span class="v"><span id="motV">5.5</span> kt</span></div>
+      <input type="range" id="mot" min="3" max="8" step="0.5" value="5.5">
+      <div class="hint">La crociera della tua barca a motore.</div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><i style="border-top-color:var(--teal)"></i>rotta a vela</span>
+    <span><i style="border-top-color:var(--amber);border-top-style:dashed"></i>tratto a motore</span>
+    <span><i style="border-top-color:#3A5B7E;border-top-style:dotted"></i>linea diretta</span>
+    <span><i style="border-top-color:#1f3a55"></i>isocrone (ogni ora)</span>
+  </div>
+
+  <div class="read" id="read"></div>
+
+  <p class="foot">Il campo qui è sintetico ma ha la <b>forma esatta di un GRIB</b>: una griglia di vettori u/v interpolata bilinearmente. Collegare il GRIB vero (openWRF/Skiron per la versione gratuita) significa solo riempire la stessa griglia — il motore non cambia. Manca ancora il tempo: per ora il campo è una sola scadenza.</p>
+</div>
+
+<script>
+// ---- Raffyca polar (from raffyca_rev_190426.csv) ----
+var TWS=[0.0,4.0,6.0,8.0,10.0,12.0,14.0,16.0,20.0,24.0];
+var TWA=[0.0,38.0,40.0,42.0,52.0,60.0,75.0,90.0,110.0,120.0,135.0,141.0,147.0,150.0,180.0];
+var PV=[[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,5.1,5.4,5.6,5.6,5.7,5.5],[0,0,0,4.7,5.3,5.55,5.8,5.75,5.8,5.7],[0,2.9,4,4.9,5.4,5.65,5.9,5.85,5.9,5.9],[0,3.37,4.53,5.33,5.8,6.06,6.3,6.26,6.35,6.7],[0,3.57,4.75,5.53,5.96,6.26,6.6,6.56,6.69,7.3],[0,3.76,5,5.8,6.25,6.6,7,7.07,7.32,8.1],[0,3.89,5.14,5.96,6.43,6.88,7.4,7.6,7.99,9.1],[0,3.86,5.07,5.96,6.5,7.1,7.73,8.19,9.2,10.5],[0,3.68,4.88,5.81,6.43,7.07,7.75,8.3,9.6,11.1],[0,3.3,4.38,5.38,6.05,6.63,7.25,7.96,9.5,12],[0,3.05,4.2,5.2,5.8,6.4,7,7.7,9.1,12],[0,2.75,3.9,4.8,5.5,6,6.6,7,8.4,11.5],[0,2.55,3.72,4.6,5.3,5.8,6.39,6.7,8,11],[0,0,0,0,0,0,0,0,0,0]];
+
+function clamp(v,a,b){return v<a?a:v>b?b:v;}
+function adiff(a,b){return ((a-b)%360+540)%360-180;}
+function interpIdx(arr,x){ // returns [i, frac] bracketing x in sorted arr
+  if(x<=arr[0])return [0,0]; if(x>=arr[arr.length-1])return [arr.length-2,1];
+  for(var i=0;i<arr.length-1;i++){if(x<=arr[i+1])return [i,(x-arr[i])/(arr[i+1]-arr[i])];}
+  return [arr.length-2,1];
+}
+function polarSpeed(twaDeg,tws){
+  var a=Math.abs(adiff(twaDeg,0)); a=Math.abs(((a%360)+360)%360); if(a>180)a=360-a;
+  if(a<TWA[1])return 0;        // no-go zone: can't point higher than close-hauled
+  var ti=interpIdx(TWA,a), si=interpIdx(TWS,clamp(tws,0,TWS[TWS.length-1]));
+  var t0=ti[0],tf=ti[1],s0=si[0],sf=si[1];
+  var a00=PV[t0][s0],a01=PV[t0][s0+1],a10=PV[t0+1][s0],a11=PV[t0+1][s0+1];
+  var top=a00+(a01-a00)*sf, bot=a10+(a11-a10)*sf;
+  return top+(bot-top)*tf;
+}
+
+// ---- scene geometry (nautical miles on a plane; +x East, +y North=up) ----
+var A={x:6,y:30}, B={x:74,y:30};         // A left, B right (course ~090)
+var LAND=[{x:30,y:6},{x:48,y:5},{x:52,y:19},{x:40,y:22},{x:28,y:16}]; // an island to avoid (south of the A-B line)
+function segHitsLand(x1,y1,x2,y2){
+  var P=LAND, n=P.length;
+  // endpoint inside?
+  function inside(px,py){var c=false;for(var i=0,j=n-1;i<n;j=i++){var xi=P[i].x,yi=P[i].y,xj=P[j].x,yj=P[j].y;
+    if(((yi>py)!=(yj>py))&&(px<(xj-xi)*(py-yi)/(yj-yi)+xi))c=!c;}return c;}
+  if(inside(x2,y2)||inside(x1,y1))return true;
+  function seg(ax,ay,bx,by,cx,cy,dx,dy){
+    function ccw(Ax,Ay,Bx,By,Cx,Cy){return (Cy-Ay)*(Bx-Ax)>(By-Ay)*(Cx-Ax);}
+    return ccw(ax,ay,cx,cy,dx,dy)!=ccw(bx,by,cx,cy,dx,dy)&&ccw(ax,ay,bx,by,cx,cy)!=ccw(ax,ay,bx,by,dx,dy);
+  }
+  for(var i=0,j=n-1;i<n;j=i++){if(seg(x1,y1,x2,y2,P[i].x,P[i].y,P[j].x,P[j].y))return true;}
+  return false;
+}
+
+var STATE={twd:45,tws:12,motorOn:true,mot:5.5};
+
+// ---- wind FIELD (regular u/v lattice, exactly the shape of a parsed GRIB) ----
+// To plug a real GRIB later: replace buildField() with the decoded grid (same FIELD.u/FIELD.v).
+var FIELD={preset:'gradiente', nx:13, ny:10, x0:0,x1:80,y0:0,y1:60, u:[],v:[]};
+function deg2uv(dir,mag){var t=dir*Math.PI/180;return {u:Math.sin(t)*mag,v:Math.cos(t)*mag};}
+function uv2dir(u,v){var mag=Math.sqrt(u*u+v*v),d=Math.atan2(u,v)*180/Math.PI;return {twd:((d%360)+360)%360,tws:mag};}
+function buildField(){
+  var p=FIELD.preset, bT=STATE.twd, bS=STATE.tws; FIELD.u=[];FIELD.v=[];
+  for(var j=0;j<FIELD.ny;j++){var ru=[],rv=[]; var fy=j/(FIELD.ny-1);
+    for(var i=0;i<FIELD.nx;i++){var fx=i/(FIELD.nx-1);
+      var twd=bT, tws=bS;
+      if(p==='gradiente'){ tws=bS-3+fy*9; }                       // more pressure to one side
+      else if(p==='brezza'){ twd=bT-32+fx*64; tws=bS-1.5+fy*3; }  // direction rotates across the area
+      else if(p==='fronte'){ var s=clamp((fx-0.46)/0.10,0,1); twd=bT+s*65; tws=bS-1+s*4; } // shift line
+      var w=deg2uv(twd,Math.max(0.6,tws)); ru.push(w.u);rv.push(w.v);
+    }
+    FIELD.u.push(ru);FIELD.v.push(rv);
+  }
+}
+function windAt(x,y){
+  var fx=clamp((x-FIELD.x0)/(FIELD.x1-FIELD.x0),0,1)*(FIELD.nx-1);
+  var fy=clamp((y-FIELD.y0)/(FIELD.y1-FIELD.y0),0,1)*(FIELD.ny-1);
+  var i=Math.min(Math.floor(fx),FIELD.nx-2), j=Math.min(Math.floor(fy),FIELD.ny-2);
+  var ti=fx-i, tj=fy-j, U=FIELD.u, V=FIELD.v;
+  var u=(U[j][i]*(1-ti)+U[j][i+1]*ti)*(1-tj)+(U[j+1][i]*(1-ti)+U[j+1][i+1]*ti)*tj;
+  var v=(V[j][i]*(1-ti)+V[j][i+1]*ti)*(1-tj)+(V[j+1][i]*(1-ti)+V[j+1][i+1]*ti)*tj;
+  return uv2dir(u,v);
+}
+
+function route(){
+  var mOn=STATE.motorOn, mSpd=STATE.mot;
+  var DH=6, dt=0.35, MAX=120, SECT=170, RAD=Math.PI/180;
+  function dist(p,q){var dx=p.x-q.x,dy=p.y-q.y;return Math.sqrt(dx*dx+dy*dy);}
+  function bearing(p,q){var b=Math.atan2(q.x-p.x,-(q.y-p.y))*180/Math.PI;return ((b%360)+360)%360;}
+  function speedToward(p,target){var h=bearing(p,target),wn=windAt(p.x,p.y),v=polarSpeed(Math.abs(adiff(h,wn.twd)),wn.tws);
+    if(mOn&&mSpd>v)return {v:mSpd,motor:true}; return {v:v,motor:false};}
+  var start={x:A.x,y:A.y,prev:null,motor:false,t:0};
+  var frontier=[start], layers=[], finish=null;
+  for(var step=0; step<MAX; step++){
+    var cand=[];
+    for(var k=0;k<frontier.length;k++){var p=frontier[k];
+      var wnd=windAt(p.x,p.y);
+      for(var h=0;h<360;h+=DH){
+        var twa=Math.abs(adiff(h,wnd.twd));
+        var v=polarSpeed(twa,wnd.tws), motored=false;
+        if(mOn && mSpd>v){v=mSpd;motored=true;}
+        if(v<0.05)continue;
+        var nx=p.x+Math.sin(h*RAD)*v*dt, ny=p.y-Math.cos(h*RAD)*v*dt;
+        if(nx<0||nx>80||ny<0||ny>60)continue;
+        if(segHitsLand(p.x,p.y,nx,ny))continue;
+        cand.push({x:nx,y:ny,prev:p,motor:motored,t:p.t+dt});
+      }
+    }
+    if(!cand.length)break;
+    // prune to isochrone: per bearing-sector from A, keep the point farthest from A
+    var buckets={};
+    for(var c=0;c<cand.length;c++){var q=cand[c];
+      var br=Math.atan2(q.x-A.x,-(q.y-A.y)); var sec=Math.round((br+Math.PI)/(2*Math.PI)*SECT);
+      var r=dist(q,A);
+      if(!buckets[sec]||r>buckets[sec]._r){q._r=r;buckets[sec]=q;}
+    }
+    frontier=[]; for(var key in buckets)frontier.push(buckets[key]);
+    layers.push(frontier);
+    // finish: first frontier point that can reach B this step (earliest time = optimal)
+    var bestT=1e9, bestNode=null;
+    for(var f=0;f<frontier.length;f++){var p2=frontier[f], d=dist(p2,B);
+      var st=speedToward(p2,B);
+      if(st.v>0.05 && d<=st.v*dt*1.25 && !segHitsLand(p2.x,p2.y,B.x,B.y)){
+        var tt=p2.t+d/st.v; if(tt<bestT){bestT=tt;bestNode={x:B.x,y:B.y,prev:p2,motor:st.motor,t:tt};}
+      }
+    }
+    if(bestNode){finish=bestNode;break;}
+  }
+  var node=finish||(function(){var best=null,bd=1e9;for(var f=0;f<frontier.length;f++){var d=dist(frontier[f],B);if(d<bd){bd=d;best=frontier[f];}}return best;})();
+  var path=[]; while(node){path.push(node);node=node.prev;} path.reverse();
+  return {path:path,layers:layers,finished:!!finish,eta:finish?finish.t:(path.length?path[path.length-1].t:0)};
+}
+
+// ---- render ----
+function render(){
+  var R=route();
+  var W=800,H=520, pad=26;
+  var minx=0,maxx=80,miny=0,maxy=60;
+  function X(x){return pad+(x-minx)/(maxx-minx)*(W-2*pad);}
+  function Y(y){return H-pad-(y-miny)/(maxy-miny)*(H-2*pad);} // y up
+  var s='';
+  // wind FIELD: faint pressure tint + arrows sampling windAt
+  var cellW=X(9)-X(0), cellH=Y(0)-Y(9), tintMax=STATE.tws+6;
+  for(var gx=4;gx<=76;gx+=9)for(var gy=4;gy<=56;gy+=9){
+    var w=windAt(gx,gy), cx=X(gx),cy=Y(gy);
+    var al=(clamp(w.tws/tintMax,0,1.2)-0.25)*0.20; if(al>0)
+      s+='<rect x="'+(cx-cellW/2).toFixed(1)+'" y="'+(cy-cellH/2).toFixed(1)+'" width="'+cellW.toFixed(1)+'" height="'+cellH.toFixed(1)+'" fill="#2BD9C4" opacity="'+al.toFixed(3)+'"/>';
+    var ar=(w.twd+180)*Math.PI/180, dx=Math.sin(ar)*8, dy=-Math.cos(ar)*8;
+    s+='<line x1="'+(cx-dx).toFixed(1)+'" y1="'+(cy+dy).toFixed(1)+'" x2="'+(cx+dx).toFixed(1)+'" y2="'+(cy-dy).toFixed(1)+'" stroke="#3a5f82" stroke-width="1.3" marker-end="url(#wh)"/>';
+  }
+  // land
+  var land='M '+LAND.map(function(p){return X(p.x).toFixed(1)+' '+Y(p.y).toFixed(1);}).join(' L ')+' Z';
+  s+='<path d="'+land+'" fill="#12304a" stroke="#2C4763" stroke-width="1.2"/>';
+  // isochrones
+  for(var i=0;i<R.layers.length;i++){
+    var L=R.layers[i].slice().sort(function(a,b){return Math.atan2(a.x-A.x,-(a.y-A.y))-Math.atan2(b.x-A.x,-(b.y-A.y));});
+    if(L.length<2)continue;
+    var d='M '+X(L[0].x).toFixed(1)+' '+Y(L[0].y).toFixed(1);
+    for(var j=1;j<L.length;j++)d+=' L '+X(L[j].x).toFixed(1)+' '+Y(L[j].y).toFixed(1);
+    var hourly=((i+1)%Math.round(1/0.35)===0);
+    s+='<path d="'+d+'" fill="none" stroke="#21405e" stroke-width="'+(hourly?1.3:0.7)+'" stroke-opacity="'+(hourly?0.9:0.4)+'"/>';
+  }
+  // direct line
+  s+='<line x1="'+X(A.x)+'" y1="'+Y(A.y)+'" x2="'+X(B.x)+'" y2="'+Y(B.y)+'" stroke="#3A5B7E" stroke-width="1.2" stroke-dasharray="2 5"/>';
+  // optimal route (split sail vs motor legs)
+  var P=R.path, motoredLegs=0, sailedLegs=0;
+  for(var k=1;k<P.length;k++){
+    var motor=P[k].motor; if(motor)motoredLegs++; else sailedLegs++;
+    s+='<line x1="'+X(P[k-1].x).toFixed(1)+'" y1="'+Y(P[k-1].y).toFixed(1)+'" x2="'+X(P[k].x).toFixed(1)+'" y2="'+Y(P[k].y).toFixed(1)+'" stroke="'+(motor?'#FFC24B':'#2BD9C4')+'" stroke-width="2.6" '+(motor?'stroke-dasharray="5 4"':'')+' stroke-linecap="round"/>';
+  }
+  // A and B
+  s+='<circle cx="'+X(A.x)+'" cy="'+Y(A.y)+'" r="6" fill="#2BD9C4"/><text x="'+(X(A.x)+10)+'" y="'+(Y(A.y)+4)+'" fill="#E8EEF2" font-size="13" font-family="var(--mono)">A</text>';
+  s+='<circle cx="'+X(B.x)+'" cy="'+Y(B.y)+'" r="6" fill="#FF6B6B"/><text x="'+(X(B.x)-18)+'" y="'+(Y(B.y)+4)+'" fill="#E8EEF2" font-size="13" font-family="var(--mono)">B</text>';
+  var defs='<defs><marker id="wh" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#33506e"/></marker></defs>';
+  document.getElementById('map').innerHTML=defs+s;
+
+  // readout
+  var straight=Math.sqrt((B.x-A.x)*(B.x-A.x)+(B.y-A.y)*(B.y-A.y));
+  var sailed=0; for(var k2=1;k2<P.length;k2++){var dx=P[k2].x-P[k2-1].x,dy=P[k2].y-P[k2-1].y;sailed+=Math.sqrt(dx*dx+dy*dy);}
+  var pctMot=P.length>1?Math.round(motoredLegs/(P.length-1)*100):0;
+  var twaB=Math.abs(adiff(90,STATE.twd)); var regime= twaB<50?'bolina':twaB<115?'lasco/traverso':'poppa';
+  var hh=Math.floor(R.eta), mm=Math.round((R.eta-hh)*60);
+  document.getElementById('read').innerHTML=
+    'Andatura media: <b>'+regime+'</b> (TWA '+Math.round(twaB)+'°). '+
+    'ETA <b>'+hh+'h'+(mm?(' '+mm+'m'):'')+'</b> · percorso <b>'+sailed.toFixed(1)+' NM</b> (diretta '+straight.toFixed(1)+' NM, +'+Math.round((sailed/straight-1)*100)+'%). '+
+    '<b style="color:var(--amber)">'+pctMot+'% a motore</b>.'+(R.finished?'':' <span style="color:var(--coral)">[B non raggiunto nei limiti]</span>');
+}
+
+// wiring
+function bind(id,vid,fmt,key){var el=document.getElementById(id);el.addEventListener('input',function(){STATE[key]=+this.value;document.getElementById(vid).textContent=fmt(+this.value);buildField();render();});}
+bind('twd','twdV',function(v){return v;},'twd');
+bind('tws','twsV',function(v){return v;},'tws');
+bind('mot','motV',function(v){return v;},'mot');
+document.getElementById('motorOn').addEventListener('change',function(){STATE.motorOn=this.checked;document.getElementById('mot').disabled=!this.checked;render();});
+document.getElementById('fld').addEventListener('click',function(e){var b=e.target.closest('button[data-f]');if(!b)return;FIELD.preset=b.getAttribute('data-f');Array.prototype.forEach.call(this.querySelectorAll('button'),function(x){x.classList.toggle('on',x===b);});buildField();render();});
+buildField();render();
+</script>
+</body></html>

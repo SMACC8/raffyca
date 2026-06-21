@@ -1,0 +1,19 @@
+{
+  "name": "Raffyca — Traversata",
+  "short_name": "Raffyca",
+  "description": "Weather routing a vela per il Mediterraneo",
+  "start_url": "./raffyca-traversata-map.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0A1628",
+  "theme_color": "#0A1628",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%230A1628'/%3E%3Cpath d='M262 92 L262 388 L150 388 Z' fill='%232BD9C4'/%3E%3Cpath d='M286 150 L378 388 L286 388 Z' fill='%23FFC24B'/%3E%3Crect x='140' y='388' width='250' height='24' rx='12' fill='%237B93AC'/%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

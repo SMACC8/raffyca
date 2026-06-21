@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="it"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Raffyca · pipeline campo di vento</title>
+<style>
+  :root{--bg:#0A1628;--bg2:#0E1F33;--ink:#E8EEF2;--sub:#7B93AC;--line:#1C3349;
+    --teal:#2BD9C4;--amber:#FFC24B;--coral:#FF6B6B;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(120% 80% at 50% -10%,#0E2138,var(--bg) 60%);
+    color:var(--ink);font-family:var(--mono);-webkit-font-smoothing:antialiased;padding:20px 14px 60px;}
+  .wrap{max-width:780px;margin:0 auto;}
+  .eyebrow{font-size:11px;letter-spacing:.22em;color:var(--sub);text-transform:uppercase;}
+  h1{font-size:22px;margin:6px 0 2px;font-weight:700;}
+  .lede{color:var(--sub);font-size:12.5px;line-height:1.6;margin:0 0 14px;max-width:62ch;}
+  .lede b{color:var(--ink);font-weight:600;}
+  .bar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:0 0 12px;}
+  .bar button{appearance:none;border:1px solid var(--line);background:#0C1C30;color:var(--sub);
+    font-family:var(--mono);font-size:12px;padding:8px 11px;border-radius:999px;cursor:pointer;transition:.18s;}
+  .bar button:hover{border-color:#2C4763;color:var(--ink);}
+  .bar button.on{background:rgba(43,217,196,.12);border-color:var(--teal);color:var(--teal);}
+  .bar button:focus-visible{outline:2px solid var(--teal);outline-offset:2px;}
+  .load{background:rgba(255,194,75,.12)!important;border-color:var(--amber)!important;color:var(--amber)!important;}
+  .pill{font-size:11px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);color:var(--sub);}
+  .pill.live{color:var(--teal);border-color:rgba(43,217,196,.4);}
+  .pill.demo{color:var(--amber);border-color:rgba(255,194,75,.4);}
+  .card{background:linear-gradient(180deg,var(--bg2),#0B1B2E);border:1px solid var(--line);
+    border-radius:16px;padding:10px;box-shadow:0 10px 40px -20px #000;}
+  svg{width:100%;height:auto;display:block;border-radius:10px;}
+  .tl{display:flex;flex-direction:column;gap:5px;margin:14px 2px 2px;}
+  .tl .row{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;}
+  .tl .k{color:var(--sub);}.tl .v{color:var(--ink);font-weight:700;}
+  input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:4px;border-radius:3px;background:#39506b;outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--teal);border:3px solid #07121F;cursor:pointer;}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--teal);border:3px solid #07121F;cursor:pointer;}
+  .read{font-size:12.5px;color:var(--sub);margin:12px 2px 0;line-height:1.7;}
+  .read b{color:var(--ink);}
+  .foot{color:var(--sub);font-size:11px;margin-top:16px;line-height:1.6;}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Raffyca · pipeline campo di vento</div>
+  <h1>Dal modello alla griglia u/v</h1>
+  <p class="lede">Scarico una <b>griglia</b> di punti vento da Open-Meteo sull'area scelta, la converto in vettori <b>u/v</b> per ogni ora e la mostro qui. È la stessa struttura che il motore di routing legge con <b>windAt</b>. Le frecce sono il vento, la velatura è la pressione; il cursore scorre le ore.</p>
+
+  <div class="bar">
+    <button data-area="adriatico" class="on">Alto Adriatico</button>
+    <button data-area="barcellona">Barcellona</button>
+    <button id="loadBtn" class="load">⟳ Carica vento reale</button>
+    <span class="pill demo" id="pill">campo sintetico</span>
+  </div>
+
+  <div class="card">
+    <svg id="map" viewBox="0 0 800 520" role="img" aria-label="Campo di vento sull'area"></svg>
+  </div>
+
+  <div class="tl">
+    <div class="row"><span class="k">Ora</span><span class="v" id="hLbl">—</span></div>
+    <input type="range" id="hour" min="0" max="0" step="1" value="0">
+  </div>
+
+  <div class="read" id="read"></div>
+
+  <p class="foot">Versione gratuita: campo da Open-Meteo (JSON, niente GRIB binario da decodificare sul telefono). Per l'alta risoluzione mediterranea — openWRF/Skiron o ECMWF — il GRIB2 si decodifica in un piccolo step di ingest e si serve già come questa griglia. Manca un passo per il routing: far leggere al motore <b>windAt(x, y, t)</b> mentre la rotta avanza nel tempo.</p>
+</div>
+
+<script>
+function clamp(v,a,b){return v<a?a:v>b?b:v;}
+function deg2uv(dir,mag){var t=dir*Math.PI/180;return {u:Math.sin(t)*mag,v:Math.cos(t)*mag};} // store FROM-dir as vector
+function uv2dir(u,v){var mag=Math.sqrt(u*u+v*v),d=Math.atan2(u,v)*180/Math.PI;return {twd:((d%360)+360)%360,tws:mag};}
+
+var AREAS={
+  adriatico:{name:"Alto Adriatico",latN:45.85,latS:44.75,lonW:12.85,lonE:14.05},
+  barcellona:{name:"Barcellona",latN:41.80,latS:41.00,lonW:1.65,lonE:2.95}
+};
+var NX=11, NY=8;
+// FIELD: slices[h].u[j][i], v[j][i]; times[]; geo bbox
+var FIELD={area:'adriatico',nx:NX,ny:NY,times:[],slices:[],source:'demo'};
+
+function gridPoints(area){var A=AREAS[area],lat=[],lon=[];
+  for(var j=0;j<NY;j++)for(var i=0;i<NX;i++){
+    lat.push(+(A.latN-(A.latN-A.latS)*j/(NY-1)).toFixed(4));
+    lon.push(+(A.lonW+(A.lonE-A.lonW)*i/(NX-1)).toFixed(4));
+  } return {lat:lat,lon:lon};
+}
+function buildURL(area){var g=gridPoints(area);
+  return "https://api.open-meteo.com/v1/forecast?latitude="+g.lat.join(",")+
+    "&longitude="+g.lon.join(",")+
+    "&hourly=wind_speed_10m,wind_direction_10m&wind_speed_unit=kn&forecast_days=2&timezone=auto";
+}
+// parse Open-Meteo multi-point response (array of point objects, row-major j*NX+i)
+function parseField(json,area){
+  var arr=Array.isArray(json)?json:[json];
+  var times=arr[0].hourly.time, H=times.length, slices=[];
+  for(var h=0;h<H;h++){var u=[],v=[];
+    for(var j=0;j<NY;j++){var ru=[],rv=[];
+      for(var i=0;i<NX;i++){var idx=j*NX+i, pt=arr[idx];
+        var sp=pt.hourly.wind_speed_10m[h], dr=pt.hourly.wind_direction_10m[h];
+        if(sp==null||dr==null){ru.push(0);rv.push(0);continue;}
+        var w=deg2uv(dr,sp); ru.push(w.u);rv.push(w.v);
+      } u.push(ru);v.push(rv);
+    } slices.push({u:u,v:v});
+  }
+  FIELD.area=area;FIELD.times=times;FIELD.slices=slices;FIELD.source='live';
+}
+// synthetic fallback (offline): a rotating + gradient field over a few hours
+function synthField(area){var times=[],slices=[];var base=new Date();base.setMinutes(0,0,0);
+  for(var h=0;h<24;h++){var u=[],v=[];var t=new Date(base.getTime()+h*3600000);
+    times.push(t.toISOString().slice(0,16));
+    var phase=h/24*Math.PI*2;
+    for(var j=0;j<NY;j++){var ru=[],rv=[];var fy=j/(NY-1);
+      for(var i=0;i<NX;i++){var fx=i/(NX-1);
+        var dir=40+fx*60+18*Math.sin(phase)+fy*20;       // varies in space + rotates over time
+        var spd=8+fy*8+4*Math.sin(phase+1)+fx*2;
+        var w=deg2uv(((dir%360)+360)%360,Math.max(1,spd)); ru.push(w.u);rv.push(w.v);
+      } u.push(ru);v.push(rv);
+    } slices.push({u:u,v:v});
+  }
+  FIELD.area=area;FIELD.times=times;FIELD.slices=slices;FIELD.source='demo';
+}
+
+// windAt(lat,lon,hourIdx): bilinear over the grid (the function the routing engine consumes)
+function windAt(lat,lon,h){var A=AREAS[FIELD.area],S=FIELD.slices[clamp(h|0,0,FIELD.slices.length-1)];
+  var fx=clamp((lon-A.lonW)/(A.lonE-A.lonW),0,1)*(NX-1);
+  var fy=clamp((A.latN-lat)/(A.latN-A.latS),0,1)*(NY-1);
+  var i=Math.min(Math.floor(fx),NX-2), j=Math.min(Math.floor(fy),NY-2), ti=fx-i, tj=fy-j;
+  var u=(S.u[j][i]*(1-ti)+S.u[j][i+1]*ti)*(1-tj)+(S.u[j+1][i]*(1-ti)+S.u[j+1][i+1]*ti)*tj;
+  var v=(S.v[j][i]*(1-ti)+S.v[j][i+1]*ti)*(1-tj)+(S.v[j+1][i]*(1-ti)+S.v[j+1][i+1]*ti)*tj;
+  return uv2dir(u,v);
+}
+
+var HOUR=0;
+function render(){
+  var A=AREAS[FIELD.area], W=800,H=520,pad=30;
+  function X(lon){return pad+(lon-A.lonW)/(A.lonE-A.lonW)*(W-2*pad);}
+  function Y(lat){return pad+(A.latN-lat)/(A.latN-A.latS)*(H-2*pad);}
+  var s='<defs><marker id="wh" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#3a5f82"/></marker></defs>';
+  // lat/lon graticule
+  for(var gl=Math.ceil(A.lonW*2)/2; gl<=A.lonE; gl+=0.5){s+='<line x1="'+X(gl)+'" y1="'+pad+'" x2="'+X(gl)+'" y2="'+(H-pad)+'" stroke="#9FB6CC" stroke-opacity=".06"/><text x="'+X(gl)+'" y="'+(H-pad+18)+'" fill="#56708E" font-size="11" text-anchor="middle" font-family="var(--mono)">'+gl.toFixed(1)+'°E</text>';}
+  for(var ga=Math.ceil(A.latS*2)/2; ga<=A.latN; ga+=0.5){s+='<line x1="'+pad+'" y1="'+Y(ga)+'" x2="'+(W-pad)+'" y2="'+Y(ga)+'" stroke="#9FB6CC" stroke-opacity=".06"/><text x="'+(pad-4)+'" y="'+(Y(ga)+4)+'" fill="#56708E" font-size="11" text-anchor="end" font-family="var(--mono)">'+ga.toFixed(1)+'°N</text>';}
+  // field: pressure tint + arrows at each grid node
+  var maxTws=1; for(var j=0;j<NY;j++)for(var i=0;i<NX;i++){var w0=uv2dir(FIELD.slices[HOUR].u[j][i],FIELD.slices[HOUR].v[j][i]);if(w0.tws>maxTws)maxTws=w0.tws;}
+  var cw=(W-2*pad)/(NX-1), ch=(H-2*pad)/(NY-1);
+  for(var j2=0;j2<NY;j2++)for(var i2=0;i2<NX;i2++){
+    var lon=A.lonW+(A.lonE-A.lonW)*i2/(NX-1), lat=A.latN-(A.latN-A.latS)*j2/(NY-1);
+    var w=uv2dir(FIELD.slices[HOUR].u[j2][i2],FIELD.slices[HOUR].v[j2][i2]);
+    var cx=X(lon),cy=Y(lat);
+    var al=clamp(w.tws/maxTws,0,1)*0.22;
+    s+='<rect x="'+(cx-cw/2).toFixed(1)+'" y="'+(cy-ch/2).toFixed(1)+'" width="'+cw.toFixed(1)+'" height="'+ch.toFixed(1)+'" fill="#2BD9C4" opacity="'+al.toFixed(3)+'"/>';
+    var ar=(w.twd+180)*Math.PI/180, L=clamp(4+w.tws*0.7,5,15), dx=Math.sin(ar)*L, dy=-Math.cos(ar)*L;
+    s+='<line x1="'+(cx-dx).toFixed(1)+'" y1="'+(cy+dy).toFixed(1)+'" x2="'+(cx+dx).toFixed(1)+'" y2="'+(cy-dy).toFixed(1)+'" stroke="#5f87b0" stroke-width="1.4" marker-end="url(#wh)"/>';
+  }
+  document.getElementById('map').innerHTML=s;
+  // readout: spread of wind across the area at this hour
+  var lo=99,hi=0,dirs=[]; for(var j3=0;j3<NY;j3++)for(var i3=0;i3<NX;i3++){var w2=uv2dir(FIELD.slices[HOUR].u[j3][i3],FIELD.slices[HOUR].v[j3][i3]);lo=Math.min(lo,w2.tws);hi=Math.max(hi,w2.tws);dirs.push(w2.twd);}
+  document.getElementById('read').innerHTML='Area <b>'+A.name+'</b> · griglia <b>'+NX+'×'+NY+'</b> ('+(NX*NY)+' punti). '+
+    'A questa scadenza il vento va da <b>'+lo.toFixed(0)+'</b> a <b>'+hi.toFixed(0)+' kt</b> sull\'area — '+(hi-lo>6?'gradiente marcato, qui il routing ha qualcosa da inseguire.':'campo abbastanza uniforme.');
+  document.getElementById('hLbl').textContent=(FIELD.times[HOUR]||'').replace('T',' ');
+}
+
+function refreshSlider(){var sl=document.getElementById('hour');sl.max=Math.max(0,FIELD.slices.length-1);sl.value=Math.min(HOUR,sl.max);HOUR=+sl.value;}
+function setPill(){var p=document.getElementById('pill');if(FIELD.source==='live'){p.className='pill live';p.textContent='dati live';}else{p.className='pill demo';p.textContent='campo sintetico';}}
+
+function loadArea(area){synthField(area);HOUR=0;refreshSlider();setPill();render();}
+function loadReal(){
+  var area=FIELD.area, btn=document.getElementById('loadBtn');btn.textContent='⟳ scarico…';
+  fetch(buildURL(area)).then(function(r){return r.json();}).then(function(j){
+    parseField(j,area);HOUR=0;refreshSlider();setPill();render();btn.textContent='⟳ Carica vento reale';
+  }).catch(function(e){
+    btn.textContent='⟳ Carica vento reale';
+    var p=document.getElementById('pill');p.className='pill demo';p.textContent='offline — campo sintetico';
+  });
+}
+
+document.querySelectorAll('.bar button[data-area]').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.bar button[data-area]').forEach(function(x){x.classList.toggle('on',x===b);});
+    loadArea(b.getAttribute('data-area'));
+  });
+});
+document.getElementById('loadBtn').addEventListener('click',loadReal);
+document.getElementById('hour').addEventListener('input',function(){HOUR=+this.value;render();document.getElementById('hLbl').textContent=(FIELD.times[HOUR]||'').replace('T',' ');});
+
+loadArea('adriatico');
+</script>
+</body></html>
