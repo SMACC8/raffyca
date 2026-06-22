@@ -36,6 +36,10 @@
   @media(max-width:560px){.mapwrap{margin:0 34px;}}
   #map{width:100%;height:520px;background:#0A1628;}
   #rfOverlay{position:absolute;left:0;top:0;pointer-events:none;z-index:500;}
+  .busy{position:absolute;inset:0;z-index:700;display:flex;align-items:center;justify-content:center;
+    background:rgba(10,22,40,.55);backdrop-filter:blur(1px);}
+  .busy span{font-family:var(--mono);font-size:13px;color:var(--amber);background:#0E2138;
+    border:1px solid var(--line);border-radius:999px;padding:9px 16px;box-shadow:0 8px 30px -10px #000;}
   .leaflet-container{background:#0A1628;font-family:var(--mono);}
   .leaflet-control-attribution{background:rgba(10,22,40,.7)!important;color:#7B93AC!important;font-size:10px;}
   .leaflet-control-attribution a{color:#2BD9C4!important;}
@@ -177,7 +181,9 @@
     <input type="text" id="q" placeholder="Cerca una località (es. Rovigno, Grado…)" autocomplete="off">
     <button class="go" id="findBtn">Cerca</button>
     <button class="go" id="resetBtn" title="Riporta A e B ai punti di esempio">↺ Reset</button>
-    <div class="hintab">Scegli <b>A</b> o <b>B</b>, poi cerca, trascina i pin o tocca la mappa.</div>
+    <button class="go" id="fitBtn" title="Crea un'area di mare che racchiude A e B (es. Trieste↔Venezia)">⤢ Area su A↔B</button>
+    <button class="go" id="recalcBtn" title="Ricalcola la rotta">↻ Aggiorna</button>
+    <div class="hintab">Scegli <b>A</b> o <b>B</b>, cerca o trascina i pin; poi <b>⤢ Area su A↔B</b> per coprirli entrambi.</div>
   </div>
 
   <div class="find">
@@ -190,6 +196,7 @@
   <div class="mapwrap">
     <div id="map"></div>
     <svg id="rfOverlay" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="busy" id="busy" hidden><span id="busyTx">⏳ ritaglio la costa…</span></div>
   </div>
 
   <div class="navbar">
@@ -702,6 +709,33 @@ function createCustomArea(){var q=document.getElementById('qarea').value.trim();
     toast('Area “'+AREAS.custom.name+'” pronta · costa ritagliata al volo');})
   .catch(function(){btn.textContent='Crea area';toast('Ricerca offline — area su misura non disponibile');});}
 
+// ---------- adatta l'area al bounding box di A e B (es. Trieste↔Venezia) ----------
+function showBusy(t){var b=document.getElementById('busy');if(b){document.getElementById('busyTx').textContent=t||'⏳ calcolo…';b.hidden=false;}}
+function hideBusy(){var b=document.getElementById('busy');if(b)b.hidden=true;}
+function fitAreaToAB(){
+  if(!COAST){toast('Carta costa non ancora caricata');return;}
+  var A=STATE.A,B=STATE.B;if(!A||!B){toast('Imposta A e B');return;}
+  showBusy('⏳ ritaglio la costa…');
+  setTimeout(function(){
+    var mLat=Math.max(0.25,Math.abs(A.lat-B.lat)*0.4),mLon=Math.max(0.30,Math.abs(A.lon-B.lon)*0.4);
+    var box={latN:clamp(Math.max(A.lat,B.lat)+mLat,COAST_BOX.latS,COAST_BOX.latN),
+             latS:clamp(Math.min(A.lat,B.lat)-mLat,COAST_BOX.latS,COAST_BOX.latN),
+             lonW:clamp(Math.min(A.lon,B.lon)-mLon,COAST_BOX.lonW,COAST_BOX.lonE),
+             lonE:clamp(Math.max(A.lon,B.lon)+mLon,COAST_BOX.lonW,COAST_BOX.lonE)};
+    // risoluzione costa adattiva (~0.9 NM/cella), con tetto per restare reattivi
+    var cl=Math.cos((box.latN+box.latS)/2*Math.PI/180);
+    var spanNM=Math.max((box.lonE-box.lonW)*60*cl,(box.latN-box.latS)*60);
+    var cells=clamp(Math.round(spanNM/0.9),140,320);
+    MED_MASKS['custom']=buildCoastMask(box,cells);
+    AREAS['custom']={name:'A↔B',latN:box.latN,latS:box.latS,lonW:box.lonW,lonE:box.lonE,A:[A.lat,A.lon],B:[B.lat,B.lon]};
+    var b=document.getElementById('customAreaBtn');b.style.display='';b.textContent='⚓ '+AREAS.custom.name;
+    document.querySelectorAll('.bar button[data-area]').forEach(function(x){x.classList.toggle('on',x===b);});
+    loadArea('custom');   // imposta FIELD.area, vento sintetico, costa, A/B correnti e rotta
+    hideBusy();
+    toast('Area su A↔B pronta · costa a '+cells+' celle (vento ancora 11×8: per box molto larghi è grossolano)');
+  },40);
+}
+
 // ---------- Naviga: posizione reale via GPS, guida sulla rotta, ricalcolo dal vivo ----------
 var NAV={on:false,watch:null,pos:null,marker:null,lastReroute:0};
 function xtePerp(pos,a,b){var cl=cosLat(FIELD.area),ax=a.lon*60*cl,ay=a.lat*60,bx=b.lon*60*cl,by=b.lat*60,px=pos.lon*60*cl,py=pos.lat*60;
@@ -773,6 +807,8 @@ document.getElementById('q').addEventListener('keydown',function(e){if(e.key==='
 document.getElementById('areaBtn').addEventListener('click',createCustomArea);
 document.getElementById('qarea').addEventListener('keydown',function(e){if(e.key==='Enter')createCustomArea();});
 document.getElementById('resetBtn').addEventListener('click',function(){resetAB(FIELD.area);placeMarkers();computeRoute();toast('A e B riportati ai punti di esempio');});
+document.getElementById('fitBtn').addEventListener('click',fitAreaToAB);
+document.getElementById('recalcBtn').addEventListener('click',function(){computeRoute();toast('Ricalcolo rotta…');});
 document.getElementById('loadBtn').addEventListener('click',loadReal);
 document.getElementById('dep').addEventListener('input',function(){STATE.dep=+this.value;computeRoute();});
 document.getElementById('motorOn').addEventListener('change',function(){STATE.motorOn=this.checked;document.getElementById('mot').disabled=!this.checked;computeRoute();});
