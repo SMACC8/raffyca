@@ -66,6 +66,22 @@ self.addEventListener('fetch', function (e) {
     return;
   }
 
+  // dataset ORC (grosso, statico): cache-first in un bucket SENZA prefisso versione,
+  // così sopravvive ai bump del SW e lo scarichi una sola volta.
+  if (url.pathname.indexOf('orc_med.json') >= 0) {
+    e.respondWith(
+      caches.open('raffyca-orc-v1').then(function (c) {
+        return c.match(req).then(function (hit) {
+          return hit || fetch(req).then(function (r) {
+            if (r && r.ok) c.put(req, r.clone());
+            return r;
+          });
+        });
+      })
+    );
+    return;
+  }
+
   // tile mappa (CARTO / OpenSeaMap): cache-first + rete in sottofondo, con tetto
   if (host.indexOf('basemaps.cartocdn.com') >= 0 || host.indexOf('openseamap.org') >= 0) {
     e.respondWith(
