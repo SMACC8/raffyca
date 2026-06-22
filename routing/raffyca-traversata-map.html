@@ -18,19 +18,19 @@
   body{margin:0;background:radial-gradient(120% 80% at 50% -10%,#0E2138,var(--bg) 60%);
     color:var(--ink);font-family:var(--mono);-webkit-font-smoothing:antialiased;padding:20px 14px 60px;}
   .wrap{max-width:780px;margin:0 auto;}
-  .eyebrow{font-size:11px;letter-spacing:.22em;color:var(--sub);text-transform:uppercase;}
+  .eyebrow{font-size:12px;letter-spacing:.22em;color:var(--sub);text-transform:uppercase;}
   h1{font-size:22px;margin:6px 0 2px;font-weight:700;}
-  .lede{color:var(--sub);font-size:12.5px;line-height:1.6;margin:0 0 14px;max-width:62ch;}
+  .lede{color:var(--sub);font-size:13.5px;line-height:1.6;margin:0 0 14px;max-width:62ch;}
   .lede b{color:var(--ink);font-weight:600;}.boat{color:var(--teal);font-weight:700;}
   .bar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:0 0 12px;}
   .bar button{appearance:none;border:1px solid var(--line);background:#0C1C30;color:var(--sub);
-    font-family:var(--mono);font-size:12px;padding:8px 11px;border-radius:999px;cursor:pointer;transition:.18s;}
+    font-family:var(--mono);font-size:13px;padding:8px 11px;border-radius:999px;cursor:pointer;transition:.18s;}
   .bar button:hover{border-color:#2C4763;color:var(--ink);}
   .bar button.on{background:rgba(43,217,196,.12);border-color:var(--teal);color:var(--teal);}
   .load{background:rgba(255,194,75,.12)!important;border-color:var(--amber)!important;color:var(--amber)!important;}
   .pill{font-size:11px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);color:var(--sub);}
   .pill.live{color:var(--teal);border-color:rgba(43,217,196,.4);}.pill.demo{color:var(--amber);border-color:rgba(255,194,75,.4);}
-  .toggle{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:0 0 10px;font-size:12px;color:var(--sub);}
+  .toggle{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:0 0 10px;font-size:13px;color:var(--sub);}
   .toggle label{display:flex;align-items:center;gap:6px;cursor:pointer;}
   .mapwrap{position:relative;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 10px 40px -20px #000;margin:0 28px;}
   @media(max-width:560px){.mapwrap{margin:0 34px;}}
@@ -53,23 +53,23 @@
   .togg input:checked{background:rgba(255,194,75,.55);}
   .togg input::after{content:"";position:absolute;top:2.5px;left:2.5px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.18s;}
   .togg input:checked::after{transform:translateX(17px);}
-  .hint{font-size:11px;color:var(--sub);line-height:1.5;}
-  .read{font-size:12.5px;color:var(--sub);margin:12px 2px 0;line-height:1.7;}.read b{color:var(--ink);}
-  .foot{color:var(--sub);font-size:11px;margin-top:16px;line-height:1.6;}
+  .hint{font-size:12px;color:var(--sub);line-height:1.5;}
+  .read{font-size:13.5px;color:var(--sub);margin:12px 2px 0;line-height:1.7;}.read b{color:var(--ink);}
+  .foot{color:var(--sub);font-size:12px;margin-top:16px;line-height:1.6;}
   /* ricerca località A/B */
   .find{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:0 0 12px;}
   .find .seg{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;}
-  .find .seg button{border:0;border-radius:0;background:#0C1C30;color:var(--sub);font-family:var(--mono);font-size:12px;padding:8px 13px;cursor:pointer;transition:.15s;}
+  .find .seg button{border:0;border-radius:0;background:#0C1C30;color:var(--sub);font-family:var(--mono);font-size:13px;padding:8px 13px;cursor:pointer;transition:.15s;}
   .find .seg button.on{color:#07121F;font-weight:700;}
   .find .seg button[data-ab="A"].on{background:var(--teal);}
   .find .seg button[data-ab="B"].on{background:var(--coral);color:#fff;}
-  .find input[type=text]{flex:1;min-width:140px;background:#0C1C30;border:1px solid var(--line);border-radius:999px;color:var(--ink);font-family:var(--mono);font-size:12.5px;padding:8px 13px;outline:none;}
+  .find input[type=text]{flex:1;min-width:140px;background:#0C1C30;border:1px solid var(--line);border-radius:999px;color:var(--ink);font-family:var(--mono);font-size:13.5px;padding:8px 13px;outline:none;}
   .find input[type=text]:focus{border-color:#2C4763;}
   .find input::placeholder{color:var(--sub);}
-  .find .go{appearance:none;border:1px solid var(--line);background:#0C1C30;color:var(--sub);font-family:var(--mono);font-size:12px;padding:8px 12px;border-radius:999px;cursor:pointer;transition:.15s;}
+  .find .go{appearance:none;border:1px solid var(--line);background:#0C1C30;color:var(--sub);font-family:var(--mono);font-size:13px;padding:8px 12px;border-radius:999px;cursor:pointer;transition:.15s;}
   .find .go:hover{border-color:#2C4763;color:var(--ink);}
   .find .go:disabled{opacity:.4;cursor:not-allowed;}
-  .find .hintab{flex-basis:100%;font-size:11px;color:var(--sub);line-height:1.5;margin-top:-2px;}
+  .find .hintab{flex-basis:100%;font-size:12px;color:var(--sub);line-height:1.5;margin-top:-2px;}
   .find .seglbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sub);padding:0 2px;}
   /* pin A/B sulla mappa */
   .ab-pin{background:none;border:0;}
@@ -100,7 +100,7 @@
   .boat-pin{background:none;border:0;}
   .boatdot{width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:18px solid #2BD9C4;filter:drop-shadow(0 1px 2px #000);}
   .polbox{margin:16px 0 0;border:1px solid var(--line);border-radius:14px;background:#0A1828;overflow:hidden;}
-  .polbox>summary{padding:11px 14px;cursor:pointer;font-size:12.5px;color:var(--ink);font-weight:700;letter-spacing:.02em;list-style:none;}
+  .polbox>summary{padding:11px 14px;cursor:pointer;font-size:13.5px;color:var(--ink);font-weight:700;letter-spacing:.02em;list-style:none;}
   .polbox>summary::-webkit-details-marker{display:none;}
   .polbox>summary::before{content:'▸ ';color:var(--sub);}
   .polbox[open]>summary::before{content:'▾ ';}
@@ -110,6 +110,16 @@
   .polin code{background:#0C1C30;padding:1px 5px;border-radius:5px;color:#9fd8ff;font-size:11px;}
   .polin textarea{width:100%;box-sizing:border-box;min-height:120px;resize:vertical;background:#0C1C30;border:1px solid var(--line);border-radius:10px;color:var(--ink);font-family:ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.5;padding:9px 11px;outline:none;}
   .polin textarea:focus{border-color:#2C4763;}
+  .orcq{width:100%;box-sizing:border-box;background:#0C1C30;border:1px solid var(--line);border-radius:10px;color:var(--ink);font-family:var(--mono);font-size:13.5px;padding:10px 12px;outline:none;}
+  .orcq:focus{border-color:var(--teal);}
+  .orcres{list-style:none;margin:8px 0 0;padding:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#0C1C30;max-height:240px;overflow-y:auto;}
+  .orcres li{padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:baseline;}
+  .orcres li:last-child{border-bottom:0;}
+  .orcres li:hover{background:#11243a;}
+  .orcres b{color:var(--teal);font-weight:600;font-size:13px;}
+  .orcres .sub{color:var(--sub);font-size:11.5px;white-space:nowrap;}
+  .orcres .none{color:var(--sub);cursor:default;}
+  .topo{background:none!important;border:0!important;width:auto!important;height:auto!important;}
   .polbtns{display:flex;gap:8px;margin:9px 0 4px;}
   #polPrev{margin-top:8px;}
   .scanbox{display:none;margin:10px 0 0;border:1px solid var(--line);border-radius:14px;background:#0A1828;padding:10px 14px;}
@@ -144,11 +154,9 @@
   <a href="../" style="display:inline-block;margin-bottom:10px;color:#2BD9C4;text-decoration:none;font-size:13px;font-family:ui-monospace,Menlo,monospace">‹ Raffyca</a>
   <div class="eyebrow">Raffyca · Traversata</div>
   <h1>La rotta sopra la mappa vera</h1>
-  <p class="lede">Carta nautica (base scura + <b>OpenSeaMap</b>) con sopra i livelli di <b class="boat">Raffyca</b>: vento, isocrone e rotta. Pan e zoom: i livelli restano incollati.</p>
+  <p class="lede">Carta nautica scura + <b>OpenSeaMap</b>, con sopra vento, isocrone e rotta di <b class="boat">Raffyca</b>. Pan e zoom: i livelli restano incollati.</p>
 
   <div class="bar">
-    <button data-area="adriatico" class="on">Alto Adriatico</button>
-    <button data-area="barcellona">Barcellona</button>
     <button data-area="custom" id="customAreaBtn" style="display:none"></button>
     <button id="loadBtn" class="load">⟳ Carica vento reale</button>
     <span class="pill demo" id="pill">campo sintetico</span>
@@ -158,6 +166,7 @@
     <label><input type="checkbox" id="tCoast" checked> costa modello</label>
     <label><input type="checkbox" id="tWind" checked> vento</label>
     <label><input type="checkbox" id="tIso" checked> isocrone</label>
+    <label><input type="checkbox" id="tNames" checked> toponimi</label>
   </div>
 
   <div class="find">
@@ -175,7 +184,7 @@
     <span class="seglbl">Area su misura</span>
     <input type="text" id="qarea" placeholder="Una zona di mare ovunque nel Med (es. Bonifacio, Eolie, Minorca…)" autocomplete="off">
     <button class="go" id="areaBtn" disabled>Crea area</button>
-    <div class="hintab">Centra un'area ovunque nel Mediterraneo: la costa è ritagliata al volo.</div>
+    <div class="hintab">Area di mare ovunque nel Med: la costa è ritagliata al volo.</div>
   </div>
 
   <div class="mapwrap">
@@ -186,7 +195,7 @@
   <div class="navbar">
     <button class="navbtn" id="navBtn">▶ Naviga</button>
     <label><input type="checkbox" id="navFollow" checked> segui la barca</label>
-    <label><input type="checkbox" id="navReroute"> ricalcola da qui</label>
+    <label title="In navigazione: rifà la rotta partendo dalla tua posizione GPS attuale (invece che da A)"><input type="checkbox" id="navReroute"> ricalcola da qui</label>
     <button class="go" id="gpxBtn" style="margin-left:auto">⬇ Esporta GPX</button>
   </div>
   <div class="navp" id="navp"></div>
@@ -234,14 +243,21 @@
   <details class="polbox">
     <summary>Polare della barca · <span id="polStatus">Raffyca, integrata</span></summary>
     <div class="polin">
-      <p class="hint">Incolla una polare ORC/CSV (riga <code>twa/tws</code> + una riga per angolo). Da <b>jieter.github.io/orc-data</b> o dal tuo ORC Speed Guide. Accetta <code>;</code>, tab e virgola decimale.</p>
-      <textarea id="polText" spellcheck="false" placeholder="twa/tws;6;8;10;12;14;16;20&#10;52;4.55;5.42;5.90;6.20;6.42;6.55;6.75&#10;60;4.85;5.70;6.15;6.45;6.66;6.80;7.05&#10;75;5.10;5.95;6.40;6.70;6.95;7.15;7.55&#10;90;5.05;5.96;6.50;6.90;7.20;7.55;8.10&#10;110;4.80;5.70;6.35;6.85;7.30;7.75;8.70&#10;120;4.45;5.35;6.05;6.60;7.10;7.60;8.80&#10;135;3.85;4.70;5.45;6.05;6.60;7.10;8.60&#10;150;3.20;4.05;4.80;5.40;5.95;6.45;7.90"></textarea>
-      <div class="polbtns"><button class="go" id="polApply">Applica polare</button><button class="go" id="polReset">Ripristina Raffyca</button></div>
+      <input type="search" id="orcQ" class="orcq" autocomplete="off" placeholder="Cerca la barca nel DB ORC (es. First 36.7, Italia 9.98, Swan 42)">
+      <ul class="orcres" id="orcRes" hidden></ul>
+      <div class="polbtns">
+        <button class="go" id="polReset">Ripristina Raffyca</button>
+        <button class="go" id="orcPasteBtn">Incolla CSV…</button>
+      </div>
+      <div id="polPasteWrap" hidden style="margin-top:6px">
+        <textarea id="polText" spellcheck="false" placeholder="twa/tws;6;8;10;12;14;16;20&#10;52;4.55;5.42;5.90;6.20;6.42;6.55;6.75&#10;60;4.85;5.70;6.15;6.45;6.66;6.80;7.05&#10;75;5.10;5.95;6.40;6.70;6.95;7.15;7.55&#10;90;5.05;5.96;6.50;6.90;7.20;7.55;8.10"></textarea>
+        <div class="polbtns"><button class="go" id="polApply">Applica polare</button></div>
+      </div>
       <div id="polPrev"></div>
     </div>
   </details>
 
-  <p class="foot">© OpenStreetMap · CARTO · OpenSeaMap · Nominatim · polari © ORC. Routing e previsioni sono stime: validale in mare.</p>
+  <p class="foot">© OSM · CARTO · OpenSeaMap · Nominatim · polari © ORC. Stime: validale in mare.</p>
 </div>
 <div id="toast"></div>
 
@@ -739,6 +755,7 @@ function initMap(){if(typeof L==='undefined'){return;}
   map=L.map('map',{zoomControl:true,zoomAnimation:false,attributionControl:true});
   baseLayer=L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:18,attribution:'© OpenStreetMap · © CARTO'}).addTo(map);
   seaLayer=L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenSeaMap'}).addTo(map);
+  namesLayer=buildNames();namesLayer.addTo(map);
   map.on('move zoom viewreset zoomend moveend resize',redraw);
   map.on('click',function(e){setAB(activeAB,e.latlng.lat,e.latlng.lng);});
   fitArea(FIELD.area);placeMarkers();redraw();}
@@ -776,6 +793,92 @@ document.getElementById('polReset').addEventListener('click',function(){resetPol
 document.getElementById('navReroute').addEventListener('change',function(){if(NAV.on&&NAV.pos)navStartFrom(NAV.pos);});
 document.getElementById('navFollow').addEventListener('change',function(){if(NAV.on&&NAV.pos&&this.checked&&map)map.panTo([NAV.pos.lat,NAV.pos.lon],{animate:false});});
 document.getElementById('tIso').addEventListener('change',redraw);
+
+/* ---------- toponimi (quadro sinottico) ---------- */
+var namesLayer=null;
+var TOPONIMI=[
+  // [lat, lon, testo, classe]  classe: sea=grande, reg=medio, loc=piccolo
+  [43.4,15.2,'M A R E  A D R I A T I C O','sea'],
+  [45.0,12.95,'Golfo di Venezia','reg'],
+  [45.55,13.5,'Golfo di Trieste','reg'],
+  [44.7,14.35,'Quarnaro','reg'],
+  [45.1,13.9,'Istria','loc'],
+  [40.2,18.95,"Canale d'Otranto",'reg'],
+  [39.0,18.6,'M A R  I O N I O','sea'],
+  [40.2,12.4,'M A R  T I R R E N O','sea'],
+  [43.6,8.6,'Mar Ligure','reg'],
+  [40.2,7.2,'Mare di Sardegna','reg'],
+  [41.3,9.25,'Bocche di Bonifacio','reg'],
+  [38.2,15.6,'Stretto di Messina','reg'],
+  [37.0,12.4,'Canale di Sicilia','reg'],
+  [39.4,2.6,'Baleari','reg'],
+  [42.9,4.6,'Golfo del Leone','reg'],
+  [38.6,24.8,'M A R  E G E O','sea'],
+  [35.0,18.5,'M E D I T E R R A N E O','sea']
+];
+function buildNames(){
+  var g=L.layerGroup(),sz={sea:'15px',reg:'12px',loc:'11px'},
+      col={sea:'rgba(123,147,172,.85)',reg:'rgba(123,147,172,.7)',loc:'rgba(123,147,172,.6)'};
+  TOPONIMI.forEach(function(t){
+    var ic=L.divIcon({className:'topo',iconSize:null,
+      html:'<span style="font-family:var(--mono);font-size:'+sz[t[3]]+';font-style:italic;color:'+col[t[3]]+
+           ';white-space:nowrap;text-shadow:0 1px 3px #000,0 0 6px #0A1628;transform:translate(-50%,-50%);'+
+           'display:inline-block;letter-spacing:'+(t[3]==='sea'?'.04em':'0')+';">'+t[2]+'</span>'});
+    g.addLayer(L.marker([t[0],t[1]],{icon:ic,interactive:false,keyboard:false}));
+  });
+  return g;
+}
+document.getElementById('tNames').addEventListener('change',function(){
+  if(!map||!namesLayer)return;if(this.checked)namesLayer.addTo(map);else map.removeLayer(namesLayer);});
+
+/* ---------- ricerca barca nel DB ORC (orc_med.json) ---------- */
+var ORCDATA=null,ORCLOAD=false;
+function escH(s){return String(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+function orcVppToCSV(v){
+  var rows=['twa/tws;'+v.speeds.join(';')];
+  v.angles.forEach(function(a){rows.push(a+';'+(v[String(a)]||[]).join(';'));});
+  return rows.join('\n');
+}
+function orcSelect(b){
+  var r=parsePolarText(orcVppToCSV(b.vpp));
+  if(r.error){toast(r.error);return;}
+  applyPolar(r);
+  var nm=b.type||b.name;
+  document.getElementById('polStatus').textContent=nm+' · ORC';
+  document.getElementById('orcRes').hidden=true;
+  document.getElementById('orcQ').value=nm;
+  toast('Polare '+nm+' · max '+r.maxB.toFixed(1)+' kt');
+}
+function orcRender(q){
+  var ul=document.getElementById('orcRes');
+  if(!ORCDATA){ul.hidden=false;ul.innerHTML='<li class="none">'+(ORCLOAD?'carico il DB…':'DB non disponibile')+'</li>';return;}
+  q=(q||'').trim().toLowerCase();
+  if(q.length<2){ul.hidden=true;ul.innerHTML='';return;}
+  var hits=[];
+  for(var i=0;i<ORCDATA.length&&hits.length<40;i++){var b=ORCDATA[i];
+    if((b.type||'').toLowerCase().indexOf(q)>=0||(b.name||'').toLowerCase().indexOf(q)>=0)hits.push(b);}
+  if(!hits.length){ul.hidden=false;ul.innerHTML='<li class="none">nessuna barca</li>';return;}
+  ul.hidden=false;
+  ul.innerHTML=hits.map(function(b){return '<li data-k="'+ORCDATA.indexOf(b)+'"><b>'+escH(b.type||b.name)+
+    '</b><span class="sub">'+escH(b.name||'')+' · '+(b.year||'')+' · '+(b.country||'')+'</span></li>';}).join('');
+}
+function orcEnsure(cb){
+  if(ORCDATA){cb&&cb();return;}
+  if(ORCLOAD)return;
+  ORCLOAD=true;
+  fetch('orc_med.json',{cache:'force-cache'}).then(function(r){return r.json();}).then(function(j){
+    ORCDATA=j;ORCLOAD=false;cb&&cb();
+  }).catch(function(){ORCLOAD=false;ORCDATA=null;toast('DB ORC non trovato — metti orc_med.json in routing/.');});
+}
+(function(){
+  var qel=document.getElementById('orcQ'),ul=document.getElementById('orcRes');
+  qel.addEventListener('focus',function(){orcEnsure(function(){orcRender(qel.value);});});
+  qel.addEventListener('input',function(){orcEnsure(function(){orcRender(qel.value);});orcRender(qel.value);});
+  ul.addEventListener('click',function(e){var li=e.target.closest('li[data-k]');if(li)orcSelect(ORCDATA[+li.getAttribute('data-k')]);});
+  document.getElementById('orcPasteBtn').addEventListener('click',function(){
+    var w=document.getElementById('polPasteWrap');w.hidden=!w.hidden;});
+})();
+
 
 resetAB('adriatico');synthField('adriatico');setPill();computeRoute();renderPolarPreview();
 loadCoast();
